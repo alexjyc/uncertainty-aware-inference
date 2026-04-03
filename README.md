@@ -33,7 +33,20 @@ Log experimental results to the shared W&B project. Ensure you are logged in:
 ```bash
 wandb login
 ```
-When running your sweeps, ensure you log the following metrics:
-- `tokens_per_second`
-- `accuracy`
-- `ece`
+When running your sweeps, consider the following fields:
+config = {
+    "model": "llama2-7b | llama2-13b | mistral-7b",
+    "team": "team-a | team-b | team-c",
+    "quant_method": "fp16 | gptq | awq | bnb",
+    "precision": "fp16 | int8 | int4 | nf4",
+    "dataset": "triviaqa | arc | hellaswag | nq",
+    "split": "validation | test",
+    "seed": 42,
+}
+
+Also ensure you log the following metrics:
+wandb.log({
+    tokens_per_second,
+    accuracy,
+    ece
+})
