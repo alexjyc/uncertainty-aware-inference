@@ -34,6 +34,7 @@ Log experimental results to the shared W&B project. Ensure you are logged in:
 wandb login
 ```
 When running your sweeps, consider the following fields:
+```bash
 config = {
     "model": "llama2-7b | llama2-13b | mistral-7b",
     "team": "team-a | team-b | team-c",
@@ -43,10 +44,14 @@ config = {
     "split": "validation | test",
     "seed": 42,
 }
+```
 
 Also ensure you log the following metrics:
+
+```bash
 wandb.log({
     tokens_per_second,
     accuracy,
     ece
 })
+```
