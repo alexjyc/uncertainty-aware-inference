@@ -1,5 +1,3 @@
-# shared/model_loader.py
-
 import gc
 import os
 import torch
@@ -50,6 +48,7 @@ def _load_awq(hf_id, hf_token, **kwargs):
     model = AutoAWQForCausalLM.from_quantized(
         hf_id, fuse_layers=False,
         device_map="auto", safetensors=True,
+        token=hf_token,
     )
     return model, tokenizer
 
@@ -61,7 +60,7 @@ def _load_gptq(hf_id, hf_token, bits, revision=None, **kwargs):
         revision=revision,
         device_map={"": 0},
         trust_remote_code=True,
-        quantization_config=GPTQConfig(bits=bits, disable_exllama=True),
+        quantization_config=GPTQConfig(bits=bits, use_exllama=False),
         token=hf_token,
     )
     return model, tokenizer

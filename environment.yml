@@ -17,6 +17,7 @@ dependencies:
     - auto-gptq>=0.7.1
     - tqdm>=4.66.0
     - matplotlib>=3.8.0
+    - netcal>=1.3.5
     - numpy<2.0
     - pandas
     - plotly
