@@ -6,6 +6,10 @@ channels:
   - defaults
 dependencies:
   - python=3.11
+  - pandas
+  - numpy<2.0
+  - plotly
+  - matplotlib>=3.8.0
   - pip
   - pip:
     - torch==2.6.0+cu128 --index-url https://download.pytorch.org/whl/cu128
@@ -16,10 +20,9 @@ dependencies:
     - autoawq>=0.2.5
     - gptqmodel>=1.0.0
     - tqdm>=4.66.0
-    - matplotlib>=3.8.0
     - netcal>=1.3.5
-    - numpy<2.0
-    - pandas
-    - plotly
     - huggingface_hub
     - optimum
+    - wandb
+    - sentencepiece
+    - protobuf
