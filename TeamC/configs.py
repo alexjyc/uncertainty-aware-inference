@@ -16,7 +16,7 @@ MODEL_REGISTRY = {
         "hf_id": "TheBloke/Llama-2-13B-GPTQ",
         "quant_type": "gptq",
         "bits": 4,
-        "gptq_revision": "gptq-4bit-128g-actorder_True",  # ← add revision
+        "gptq_revision": "gptq-4bit-128g-actorder_True",
         "description": "GPTQ INT4",
         },
     "llama2-13b-gptq-int8": {
