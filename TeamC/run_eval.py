@@ -1,15 +1,16 @@
-# Team A — Calibration Evaluation
+# Team C — Calibration Evaluation
 # Runs one quantization config across hellaswag, triviaqa, pubmedqa.
 #
 # Configs (see TeamA/configs.py):
-#   llama2-7b-fp16       FP16 baseline     needs HF_TOKEN
-#   llama2-7b-nf4        NF4 bitsandbytes  needs HF_TOKEN
-#   llama2-7b-awq-int4   AWQ INT4          no token needed
-#   llama2-7b-gptq-int4  GPTQ INT4         no token needed
+#   llama2-13b-fp16       FP16 baseline     needs HF_TOKEN
+#   llama2-13b-nf4        NF4 bitsandbytes  needs HF_TOKEN
+#   llama2-13b-awq-int4   AWQ INT4          no token needed
+#   llama2-13b-gptq-int4  GPTQ INT4         no token needed
+#   llama2-13b-gptq-int8  GPTQ INT8         no token needed
 #
 # Usage:
-#   python TeamA/run_eval.py
-#   HF_TOKEN=hf_... python TeamA/run_eval.py   # for gated models
+#   python TeamC/run_eval.py
+#   HF_TOKEN=hf_... python TeamC/run_eval.py   # for gated models
 
 
 import os

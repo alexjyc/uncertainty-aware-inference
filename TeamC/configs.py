@@ -40,14 +40,19 @@ Update model IDs here if using different quantized checkpoints.
 
 
 MODEL_REGISTRY = {
-
-    "llama2-13b-gptq-int4": {
-    "hf_id": "TheBloke/Llama-2-13B-GPTQ",
-    "quant_type": "gptq",
-    "bits": 4,
-    "gptq_revision": "gptq-4bit-128g-actorder_True",  # ← add revision
-    "description": "GPTQ INT4",
+    "llama2-13b-fp16": {
+        "hf_id": "meta-llama/Llama-2-13b-hf",
+        "quant_type": "fp16",
+        "bits": 16,
+        "description": "FP16 Baseline",
     },
+    "llama2-13b-gptq-int4": {
+        "hf_id": "TheBloke/Llama-2-13B-GPTQ",
+        "quant_type": "gptq",
+        "bits": 4,
+        "gptq_revision": "gptq-4bit-128g-actorder_True",  # ← add revision
+        "description": "GPTQ INT4",
+        },
     "llama2-13b-gptq-int8": {
         "hf_id": "TheBloke/Llama-2-13B-GPTQ",
         "quant_type": "gptq",
