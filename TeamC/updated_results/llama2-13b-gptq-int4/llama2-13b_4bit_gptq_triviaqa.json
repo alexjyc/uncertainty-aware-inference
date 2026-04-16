@@ -1,5 +1,5 @@
 {
-  "model": "llama2-7b",
+  "model": "llama2-13b",
   "precision": "gptq",
   "quant_method": "4bit",
   "dataset": "triviaqa",
