@@ -28,7 +28,7 @@ try:
         datasets_to_run=["hellaswag", "triviaqa", "pubmedqa"],
         max_samples=MAX_SAMPLES,
         output_dir=OUTPUT_DIR,
-        model_tag="llama2-13b",
+        model_tag="mistral-7b",
         precision=MODEL_REGISTRY[CONFIG_KEY]["quant_type"],
         quant_method=str(MODEL_REGISTRY[CONFIG_KEY]["bits"]) + "bit",
         seed=SEED,
