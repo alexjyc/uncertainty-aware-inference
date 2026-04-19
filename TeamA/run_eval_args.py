@@ -30,11 +30,11 @@ group.add_argument("--config", choices=list(MODEL_REGISTRY.keys()),
                    help="single config to run")
 group.add_argument("--all", action="store_true",
                    help="run all configs in MODEL_REGISTRY")
-parser.add_argument("--samples",  type=int, default=1000,
-                    help="samples per dataset (default: 1000, use 10 for quick check)")
+parser.add_argument("--samples", type=int, default=None,
+                    help="samples per dataset (default: full dataset, use 10 for quick check)")
 parser.add_argument("--datasets", nargs="+", default=["hellaswag", "triviaqa", "pubmedqa"],
                     help="datasets to evaluate on")
-parser.add_argument("--seed",     type=int, default=42)
+parser.add_argument("--seed", type=int, default=42)
 args = parser.parse_args()
 
 configs_to_run = list(MODEL_REGISTRY.keys()) if args.all else [args.config]

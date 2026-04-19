@@ -1,16 +1,13 @@
 # Team A — Calibration Evaluation
 # Runs one quantization config across hellaswag, triviaqa, pubmedqa.
 #
-# Configs (see TeamA/configs.py):
-#   llama1-7b-fp16       FP16 baseline     no token needed
-#   llama1-7b-nf4        NF4 bitsandbytes  no token needed
-#   llama1-7b-awq-int4   AWQ INT4          no token needed
-#   llama1-7b-gptq-int4  GPTQ INT4         no token needed
-#   llama1-7b-gptq-int8  GPTQ INT8         no token needed
+# Configs (see TeamA/configs.py): (no token needed for all)
+#   llama1-7b-fp16       FP16 baseline
+#   llama1-7b-nf4        NF4 bitsandbytes
+#   llama1-7b-awq-int4   AWQ INT4
+#   llama1-7b-gptq-int4  GPTQ INT4
+#   llama1-7b-gptq-int8  GPTQ INT8
 #
-# Usage:
-#   python TeamA/run_eval.py
-#   HF_TOKEN=hf_... python TeamA/run_eval.py   # for gated models
 
 
 import os
@@ -23,7 +20,7 @@ from shared.model_loader import load_model, free_model
 from shared.eval_utils import run_eval
 
 CONFIG_KEY = "llama1-7b-awq-int4"
-MAX_SAMPLES = 1000
+MAX_SAMPLES = None   # full dataset; set to e.g. 10 for a quick check
 SEED = 42
 
 OUTPUT_DIR = f"TeamA/results/{CONFIG_KEY}"
