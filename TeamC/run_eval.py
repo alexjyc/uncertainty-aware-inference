@@ -23,10 +23,10 @@ from shared.model_loader import load_model, free_model
 from shared.eval_utils import run_eval
 
 CONFIG_KEY = "llama2-13b-nf4"
-MAX_SAMPLES = 1000
+MAX_SAMPLES = None
 SEED = 42
 
-OUTPUT_DIR = f"./updated_results/{CONFIG_KEY}"
+OUTPUT_DIR = f"./full_results/{CONFIG_KEY}"
 
 model, tokenizer = load_model(CONFIG_KEY, MODEL_REGISTRY)
 
