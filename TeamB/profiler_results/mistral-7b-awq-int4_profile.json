@@ -1,0 +1,90 @@
+{
+  "config_key": "mistral-7b-awq-int4",
+  "hf_id": "TheBloke/Mistral-7B-Instruct-v0.2-AWQ",
+  "quant_type": "awq",
+  "bits": 4,
+  "kineto_cuda": true,
+  "timing": {
+    "total_inference_ms": 5488.475742199898,
+    "tokens_per_second": 9.109997447116152,
+    "all_step_ms": [
+      5482.641016999878,
+      5451.5537909996965,
+      5484.248835000017,
+      5504.006666999885,
+      5519.928401000016
+    ]
+  },
+  "memory": {
+    "peak_gpu_gb": 4.16737792
+  },
+  "compute": {
+    "avg_cuda_ms": 9093.092586400588,
+    "total_cuda_ms": 45465.46293200294,
+    "avg_flops_per_step": 13207779445.0,
+    "total_flops": 66038897225.0,
+    "arithmetic_intensity": 3.169326060306045
+  },
+  "top_kernels": [
+    {
+      "name": "WQLinearMMFunction",
+      "cuda_time_ms": 903.9798104000785,
+      "pct": 9.941390146538803,
+      "calls": 11200
+    },
+    {
+      "name": "awq_gemm_kernel",
+      "cuda_time_ms": 878.9825866000742,
+      "pct": 9.666486712283778,
+      "calls": 11200
+    },
+    {
+      "name": "aten::mul",
+      "cuda_time_ms": 56.300078800131146,
+      "pct": 0.6191521560479016,
+      "calls": 14700
+    },
+    {
+      "name": "aten::cat",
+      "cuda_time_ms": 37.09412799996997,
+      "pct": 0.40793742775089586,
+      "calls": 6600
+    },
+    {
+      "name": "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<c10::Half, c10::Half, c10::Half, at::native::binary_internal::MulFunctor<float> > >(at::TensorIteratorBase&, at::native::BinaryFunctor<c10::Half, c10::Half, c10::Half, at::native::binary_internal::MulFunctor<float> > const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<c10::Half, c10::Half, c10::Half, at::native::binary_internal::MulFunctor<float> > >(at::TensorIteratorBase&, at::native::BinaryFunctor<c10::Half, c10::Half, c10::Half, at::native::binary_internal::MulFunctor<float> > const&)::{lambda(int)#1})",
+      "cuda_time_ms": 30.087176200081792,
+      "pct": 0.330879466080434,
+      "calls": 6465
+    },
+    {
+      "name": "aten::add",
+      "cuda_time_ms": 27.03223519999748,
+      "pct": 0.29728318438576384,
+      "calls": 9800
+    },
+    {
+      "name": "aten::copy_",
+      "cuda_time_ms": 26.998047999990415,
+      "pct": 0.29690721548758947,
+      "calls": 7021
+    },
+    {
+      "name": "aten::to",
+      "cuda_time_ms": 26.484791199988173,
+      "pct": 0.2912627464015729,
+      "calls": 21572
+    },
+    {
+      "name": "aten::_to_copy",
+      "cuda_time_ms": 26.484791199988173,
+      "pct": 0.2912627464015729,
+      "calls": 6817
+    },
+    {
+      "name": "aten::fill_",
+      "cuda_time_ms": 25.11660680001403,
+      "pct": 0.2762163319174582,
+      "calls": 11402
+    }
+  ]
+}

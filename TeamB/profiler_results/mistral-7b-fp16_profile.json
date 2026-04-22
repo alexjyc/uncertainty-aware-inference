@@ -1,0 +1,90 @@
+{
+  "config_key": "mistral-7b-fp16",
+  "hf_id": "mistralai/Mistral-7B-Instruct-v0.2",
+  "quant_type": "fp16",
+  "bits": 16,
+  "kineto_cuda": true,
+  "timing": {
+    "total_inference_ms": 3813.9210966000064,
+    "tokens_per_second": 13.109867439201473,
+    "all_step_ms": [
+      3819.5306659999915,
+      3774.4419599998764,
+      3858.6769610001284,
+      3814.8492719997193,
+      3802.1066240003165
+    ]
+  },
+  "memory": {
+    "peak_gpu_gb": 14.500045824
+  },
+  "compute": {
+    "avg_cuda_ms": 7772.612832200426,
+    "total_cuda_ms": 38863.06416100213,
+    "avg_flops_per_step": 836767758453.0,
+    "total_flops": 4183838792265.0,
+    "arithmetic_intensity": 57.707938899614334
+  },
+  "top_kernels": [
+    {
+      "name": "aten::matmul",
+      "cuda_time_ms": 635.7951968000303,
+      "pct": 8.17994168146462,
+      "calls": 11300
+    },
+    {
+      "name": "aten::linear",
+      "cuda_time_ms": 635.6403310000317,
+      "pct": 8.177949226631966,
+      "calls": 11250
+    },
+    {
+      "name": "aten::mm",
+      "cuda_time_ms": 635.6403310000317,
+      "pct": 8.177949226631966,
+      "calls": 11250
+    },
+    {
+      "name": "ampere_fp16_s16816gemm_fp16_128x64_ldg8_f2f_stages_64x4_tn",
+      "cuda_time_ms": 322.4557691999754,
+      "pct": 4.1486148372668685,
+      "calls": 3250
+    },
+    {
+      "name": "ampere_fp16_s16816gemm_fp16_64x64_sliced1x2_ldg8_f2f_stages_64x6_tn",
+      "cuda_time_ms": 253.00183960000666,
+      "pct": 3.255042352706276,
+      "calls": 4800
+    },
+    {
+      "name": "aten::mul",
+      "cuda_time_ms": 57.09084320006824,
+      "pct": 0.7345128907431484,
+      "calls": 14700
+    },
+    {
+      "name": "std::enable_if<!(false), void>::type internal::gemvx::kernel<int, int, __half, __half, __half, float, false, true, true, false, 7, false, cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<__half const>, cublasGemvTensorStridedBatched<__half const>, cublasGemvTensorStridedBatched<__half>, float> >(cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<__half const>, cublasGemvTensorStridedBatched<__half const>, cublasGemvTensorStridedBatched<__half>, float>)",
+      "cuda_time_ms": 39.98069800004005,
+      "pct": 0.5143791265970149,
+      "calls": 3136
+    },
+    {
+      "name": "aten::cat",
+      "cuda_time_ms": 37.18091580000657,
+      "pct": 0.47835800653768895,
+      "calls": 6600
+    },
+    {
+      "name": "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<c10::Half, c10::Half, c10::Half, at::native::binary_internal::MulFunctor<float> > >(at::TensorIteratorBase&, at::native::BinaryFunctor<c10::Half, c10::Half, c10::Half, at::native::binary_internal::MulFunctor<float> > const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<c10::Half, c10::Half, c10::Half, at::native::binary_internal::MulFunctor<float> > >(at::TensorIteratorBase&, at::native::BinaryFunctor<c10::Half, c10::Half, c10::Half, at::native::binary_internal::MulFunctor<float> > const&)::{lambda(int)#1})",
+      "cuda_time_ms": 30.49056960005882,
+      "pct": 0.39228210973975586,
+      "calls": 6465
+    },
+    {
+      "name": "aten::add",
+      "cuda_time_ms": 27.718850199955273,
+      "pct": 0.356622036866695,
+      "calls": 9800
+    }
+  ]
+}

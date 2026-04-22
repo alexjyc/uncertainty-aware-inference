@@ -1,0 +1,90 @@
+{
+  "config_key": "mistral-7b-nf4",
+  "hf_id": "mistralai/Mistral-7B-Instruct-v0.2",
+  "quant_type": "nf4",
+  "bits": 4,
+  "kineto_cuda": true,
+  "timing": {
+    "total_inference_ms": 7629.404445600085,
+    "tokens_per_second": 6.553591483649192,
+    "all_step_ms": [
+      7556.965938999383,
+      7472.419346000606,
+      7721.154725000815,
+      7658.949802999814,
+      7737.532414999805
+    ]
+  },
+  "memory": {
+    "peak_gpu_gb": 4.376562688
+  },
+  "compute": {
+    "avg_cuda_ms": 11170.961965599641,
+    "total_cuda_ms": 55854.80982799821,
+    "avg_flops_per_step": 158137759861.0,
+    "total_flops": 790688799305.0,
+    "arithmetic_intensity": 36.13286753428539
+  },
+  "top_kernels": [
+    {
+      "name": "bitsandbytes::gemv_4bit",
+      "cuda_time_ms": 426.4389651999335,
+      "pct": 3.8173880325895713,
+      "calls": 10976
+    },
+    {
+      "name": "void kgemm_4bit_inference_naive<__half, 128, 16>(int, int, int, __half*, unsigned char*, float*, float const*, __half*, int, int, int, int)",
+      "cuda_time_ms": 426.4079173999334,
+      "pct": 3.817110099497545,
+      "calls": 10976
+    },
+    {
+      "name": "aten::copy_",
+      "cuda_time_ms": 199.7504427999481,
+      "pct": 1.7881221278442136,
+      "calls": 29645
+    },
+    {
+      "name": "aten::to",
+      "cuda_time_ms": 199.2355621999541,
+      "pct": 1.7835130297058477,
+      "calls": 44196
+    },
+    {
+      "name": "aten::_to_copy",
+      "cuda_time_ms": 199.2355621999541,
+      "pct": 1.7835130297058477,
+      "calls": 29441
+    },
+    {
+      "name": "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#10}::operator()() const::{lambda(c10::Half)#1}, std::array<char*, 2ul>, 4, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >(int, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#10}::operator()() const::{lambda(c10::Half)#1}, std::array<char*, 2ul>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1>)",
+      "cuda_time_ms": 104.69710720002101,
+      "pct": 0.9372255274203776,
+      "calls": 11424
+    },
+    {
+      "name": "aten::add",
+      "cuda_time_ms": 91.20398360006942,
+      "pct": 0.8164380460780999,
+      "calls": 20776
+    },
+    {
+      "name": "MatMul4Bit",
+      "cuda_time_ms": 75.5325458000092,
+      "pct": 0.6761507740569478,
+      "calls": 224
+    },
+    {
+      "name": "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}, std::array<char*, 2ul>, 4, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >(int, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}, std::array<char*, 2ul>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1>)",
+      "cuda_time_ms": 66.8581361999395,
+      "pct": 0.5984993629539286,
+      "calls": 11200
+    },
+    {
+      "name": "void at::native::elementwise_kernel<128, 2, at::native::gpu_kernel_impl_nocast<at::native::CUDAFunctor_add<float> >(at::TensorIteratorBase&, at::native::CUDAFunctor_add<float> const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::CUDAFunctor_add<float> >(at::TensorIteratorBase&, at::native::CUDAFunctor_add<float> const&)::{lambda(int)#1})",
+      "cuda_time_ms": 65.77125339999256,
+      "pct": 0.5887698266499474,
+      "calls": 11200
+    }
+  ]
+}

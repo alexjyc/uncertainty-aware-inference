@@ -1,0 +1,90 @@
+{
+  "config_key": "mistral-7b-gptq-int8",
+  "hf_id": "TheBloke/Mistral-7B-Instruct-v0.2-GPTQ",
+  "quant_type": "gptq",
+  "bits": 8,
+  "kineto_cuda": true,
+  "timing": {
+    "total_inference_ms": 6319.101559799856,
+    "tokens_per_second": 7.912517234741776,
+    "all_step_ms": [
+      6368.687150999904,
+      6306.475422999938,
+      6290.086199999678,
+      6291.74071999978,
+      6338.51830499998
+    ]
+  },
+  "memory": {
+    "peak_gpu_gb": 7.806736384
+  },
+  "compute": {
+    "avg_cuda_ms": 13731.317777000044,
+    "total_cuda_ms": 68656.58888500021,
+    "avg_flops_per_step": 836767758453.0,
+    "total_flops": 4183838792265.0,
+    "arithmetic_intensity": 107.18534830610722
+  },
+  "top_kernels": [
+    {
+      "name": "QuantLinearFunction",
+      "cuda_time_ms": 1723.7122595999583,
+      "pct": 12.553145208591534,
+      "calls": 11200
+    },
+    {
+      "name": "dequant_kernel",
+      "cuda_time_ms": 1018.3916707999455,
+      "pct": 7.416561813941495,
+      "calls": 11200
+    },
+    {
+      "name": "aten::matmul",
+      "cuda_time_ms": 715.2296792000028,
+      "pct": 5.208747556611155,
+      "calls": 11300
+    },
+    {
+      "name": "aten::mm",
+      "cuda_time_ms": 715.0761374000076,
+      "pct": 5.2076293696862805,
+      "calls": 11250
+    },
+    {
+      "name": "ampere_bf16_s16816gemm_bf16_256x64_ldg8_f2f_stages_64x3_nn",
+      "cuda_time_ms": 341.8016659999802,
+      "pct": 2.4892124088228296,
+      "calls": 3232
+    },
+    {
+      "name": "ampere_bf16_s16816gemm_bf16_128x64_ldg8_f2f_stages_32x6_nn",
+      "cuda_time_ms": 161.98224940000085,
+      "pct": 1.1796555292844588,
+      "calls": 1568
+    },
+    {
+      "name": "ampere_bf16_s16816gemm_bf16_64x64_sliced1x2_ldg8_f2f_stages_64x5_nn",
+      "cuda_time_ms": 133.9215892000072,
+      "pct": 0.9753003417073766,
+      "calls": 3136
+    },
+    {
+      "name": "aten::mul",
+      "cuda_time_ms": 55.943193000025595,
+      "pct": 0.40741314059259803,
+      "calls": 14700
+    },
+    {
+      "name": "aten::cat",
+      "cuda_time_ms": 36.77642280007062,
+      "pct": 0.26782879398269505,
+      "calls": 6600
+    },
+    {
+      "name": "ampere_bf16_s16816gemm_bf16_128x64_ldg8_f2f_stages_64x4_nn",
+      "cuda_time_ms": 32.77265439998451,
+      "pct": 0.2386708612546911,
+      "calls": 3136
+    }
+  ]
+}
