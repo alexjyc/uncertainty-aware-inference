@@ -1,0 +1,16 @@
+{
+  "config_key": "mistral-7b-fp16",
+  "model": "mistralai/Mistral-7B-Instruct-v0.2",
+  "quantization": null,
+  "revision": null,
+  "kernel": "cuBLAS",
+  "avg_tok_per_sec": 942.1,
+  "iter_tok_per_sec": [
+    942.05,
+    941.93,
+    942.33
+  ],
+  "peak_gpu_mem_gb": 71.637,
+  "n_prompts": 10,
+  "n_output_tokens": 128
+}

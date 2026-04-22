@@ -1,0 +1,16 @@
+{
+  "config_key": "mistral-7b-awq-int4",
+  "model": "TheBloke/Mistral-7B-Instruct-v0.2-AWQ",
+  "quantization": "awq",
+  "revision": null,
+  "kernel": "fused_GEMV (AWQ)",
+  "avg_tok_per_sec": 207.21,
+  "iter_tok_per_sec": [
+    207.2,
+    207.2,
+    207.22
+  ],
+  "peak_gpu_mem_gb": 72.094,
+  "n_prompts": 10,
+  "n_output_tokens": 128
+}
