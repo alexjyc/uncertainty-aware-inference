@@ -7,17 +7,14 @@ Reads model IDs, quant types, and revisions directly from
 MODEL_REGISTRY in configs.py — no other constants required.
 
 Key fixes vs. original pytorch_profiler.py:
-  ✓ with_modules=False        (was True → caused torch.fx tracing errors on all HF models)
-  ✓ with_stack=False          (default; True produces 500MB+ traces on A100)
-  ✓ cuda.synchronize()        inside profiler context (CUDA events flushed before trace)
-  ✓ export_chrome_trace       inside 'with profile()' block (avoids empty-trace bug)
-  ✓ profile_memory=False      (was True → caused kineto_results=None on some PyTorch builds)
-  ✓ cuda.synchronize()        before export_chrome_trace (forces Kineto to finalize)
-  ✓ device = cuda:0           (not next(model.parameters()).device — returns 'meta' for quant layers)
-  ✓ acc_events=True           (without this, key_averages() only has last step's events, not all steps)
-  ✓ analytical roofline AI    (PyTorch flops=0 for GPTQ/AWQ/NF4 custom kernels; use 2/bytes_per_weight)
-  ✓ nvidia-smi memory         (torch allocator undercounts for GPTQ/AWQ; nvidia-smi reads driver directly)
-  ✓ roofline dict in output   (ai_decode, ai_prefill, bound_decode, ridge_point restored for plots)
+  ✓ with_modules=False   (was True → caused torch.fx tracing errors on all HF models)
+  ✓ with_stack=False     (default; True produces 500MB+ traces on A100)
+  ✓ cuda.synchronize()   inside profiler context (CUDA events flushed before trace)
+  ✓ export_chrome_trace  inside 'with profile()' block (avoids empty-trace bug)
+  ✓ profile_memory=False (was True → caused kineto_results=None on some PyTorch builds)
+  ✓ cuda.synchronize()   before export_chrome_trace (forces Kineto to finalize)
+  ✓ device = cuda:0      (not next(model.parameters()).device — returns 'meta' for quant layers)
+  ✓ kernel times         are per-step averages (key_averages() accumulates across all steps)
 
 Usage:
     # Profile one config by its MODEL_REGISTRY key:
@@ -50,106 +47,9 @@ import os
 import time
 from pathlib import Path
 
-import subprocess
-
 import numpy as np
 import torch
 from torch.profiler import ProfilerActivity, profile, record_function
-
-# ─────────────────────────────────────────────────────────────
-# GPU hardware specs for roofline analysis
-# ─────────────────────────────────────────────────────────────
-
-GPU_SPECS = {
-    "A100": {"tflops_fp16": 312.0,  "bandwidth_tb": 1.555},
-    "L4":   {"tflops_fp16": 121.6,  "bandwidth_tb": 0.300},
-    "T4":   {"tflops_fp16": 65.0,   "bandwidth_tb": 0.300},
-    "V100": {"tflops_fp16": 125.0,  "bandwidth_tb": 0.900},
-}
-
-
-def detect_gpu_specs() -> dict:
-    """Auto-detect GPU and return its roofline specs."""
-    if not torch.cuda.is_available():
-        return {**GPU_SPECS["A100"], "name": "A100"}
-    name = torch.cuda.get_device_name(0)
-    for key, specs in GPU_SPECS.items():
-        if key in name:
-            return {**specs, "name": key}
-    logger_pre = logging.getLogger(__name__)
-    logger_pre.warning(
-        f"Unknown GPU '{name}' — defaulting to A100 specs. "
-        f"Add it to GPU_SPECS in run_profiler.py for accurate roofline."
-    )
-    return {**GPU_SPECS["A100"], "name": "unknown"}
-
-
-def get_gpu_mem_gb() -> float:
-    """
-    Read actual GPU VRAM usage from the driver via nvidia-smi.
-    Reliable for all allocators (PyTorch, gptqmodel, autoawq, bitsandbytes).
-    Falls back to torch allocator if nvidia-smi is unavailable.
-    """
-    try:
-        out = subprocess.run(
-            ["nvidia-smi", "--query-gpu=memory.used", "--format=csv,noheader,nounits"],
-            capture_output=True, text=True, timeout=10,
-        )
-        mib_values = [float(x.strip()) for x in out.stdout.strip().splitlines() if x.strip()]
-        return sum(mib_values) / 1024.0  # MiB → GB
-    except Exception:
-        return torch.cuda.max_memory_allocated() / 1e9 if torch.cuda.is_available() else 0.0
-
-
-def analytical_roofline(bits: int, param_gb: float, gpu: dict) -> dict:
-    """
-    Compute analytical roofline metrics for decode and prefill phases.
-
-    Arithmetic Intensity (AI) = FLOPs / bytes_of_memory_moved.
-
-    For LLM decode (one token at a time):
-      - FLOPs per token ≈ 2 × n_params  (matmul dominates)
-      - Memory moved per token = n_params × bytes_per_weight  (load all weights once)
-      - AI_decode = 2 × n_params / (n_params × bpw) = 2 / bpw
-
-    For prefill (seq_len tokens processed in parallel):
-      - FLOPs = 2 × n_params × seq_len
-      - Memory moved ≈ n_params × bpw  (weights loaded once for whole sequence)
-      - AI_prefill = 2 × seq_len / bpw
-
-    This formula is independent of measured FLOPs — which is correct because
-    PyTorch's flops counter returns 0 for all custom quant kernels (GPTQ/AWQ/NF4).
-
-    Ridge point = peak_TFLOPS / peak_bandwidth.
-    Workloads with AI < ridge_point are memory-bound; above it are compute-bound.
-    All LLM decode phases are deeply memory-bound (AI << ridge_point).
-    """
-    bytes_per_weight = bits / 8.0
-    n_params         = param_gb * 1e9 / bytes_per_weight
-
-    flops_per_token  = 2.0 * n_params
-    mem_decode       = n_params * bytes_per_weight
-    ai_decode        = flops_per_token / mem_decode        # = 2 / bpw
-
-    seq_len_prefill  = 256
-    ai_prefill       = (flops_per_token * seq_len_prefill) / mem_decode
-
-    peak_flops       = gpu["tflops_fp16"] * 1e12
-    bandwidth        = gpu["bandwidth_tb"] * 1e12
-    ridge_point      = peak_flops / bandwidth
-
-    return {
-        "ai_decode":          round(ai_decode, 4),
-        "ai_prefill":         round(ai_prefill, 4),
-        "ridge_point":        round(ridge_point, 2),
-        "bound_decode":       "memory" if ai_decode  < ridge_point else "compute",
-        "bound_prefill":      "memory" if ai_prefill < ridge_point else "compute",
-        "gpu_name":           gpu["name"],
-        "peak_tflops_fp16":   gpu["tflops_fp16"],
-        "bandwidth_tbps":     gpu["bandwidth_tb"],
-        "bits":               bits,
-        "bytes_per_weight":   bytes_per_weight,
-    }
 
 try:
     import wandb
@@ -172,6 +72,64 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 logger = logging.getLogger(__name__)
+
+
+# ─────────────────────────────────────────────────────────────
+# Kineto probe — must run before any model load
+# ─────────────────────────────────────────────────────────────
+
+def _probe_kineto() -> bool:
+    """
+    Run a tiny profiler context BEFORE any model is loaded to bind
+    Kineto to the CUDA context while it is still fresh.
+
+    On Colab/A100, if a model is loaded first (which allocates large
+    CUDA tensors and runs kernels), Kineto's CUDA activity collector
+    can no longer attach and kineto_results stays None forever.
+
+    Returns True if Kineto CUDA is confirmed working, False otherwise.
+    """
+    if not torch.cuda.is_available():
+        return False
+
+    # Ensure a CUDA context exists
+    _ = torch.zeros(1, device="cuda")
+    torch.cuda.synchronize()
+
+    # Disable the daemon mode that causes attach failures on some builds
+    os.environ.setdefault("KINETO_USE_DAEMON", "0")
+
+    try:
+        with profile(
+            activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
+            record_shapes=False,
+            profile_memory=False,
+            with_flops=False,
+            with_stack=False,
+            with_modules=False,
+        ) as _prof:
+            _ = torch.mm(
+                torch.randn(64, 64, device="cuda"),
+                torch.randn(64, 64, device="cuda"),
+            )
+            torch.cuda.synchronize()
+
+        # Try to export — if kineto_results is None this will raise AttributeError
+        import tempfile, os as _os
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=True) as tmp:
+            _prof.export_chrome_trace(tmp.name)
+
+        logger.info("Kineto CUDA backend: active (GPU kernel stats available)")
+        return True
+
+    except AttributeError:
+        logger.warning(
+            "Kineto CUDA backend: NOT active on this build. "
+            "Kernel stats will use CPU-side times. "
+            "To fix: reinstall PyTorch with Kineto support: "
+            "pip install torch --index-url https://download.pytorch.org/whl/cu121"
+        )
+        return False
 
 
 # ─────────────────────────────────────────────────────────────
@@ -314,22 +272,9 @@ def profile_inference_fixed(
         torch.cuda.reset_peak_memory_stats()
 
     # ── Profiling ─────────────────────────────────────────────────────────────
-    # Force CUDA context fully initialized before Kineto opens.
-    # Without this, kineto_results stays None on some Colab/A100 builds
-    # even after warmup, because the CUDA context isn't bound to the
-    # current thread yet when the profiler context manager opens.
-    if torch.cuda.is_available():
-        _ = torch.zeros(1, device="cuda")
-        torch.cuda.synchronize()
-
     timing_ms_list = []
-    # CPU-only activities avoid the kineto_results=None bug on environments
-    # where the Kineto CUDA backend fails to initialize. We still get
-    # accurate wall-clock timing and CUDA kernel names via CPU-side events.
-    # CUDA activities are added only when Kineto is confirmed available.
-    use_cuda_activity = torch.cuda.is_available()
     activities = [ProfilerActivity.CPU]
-    if use_cuda_activity:
+    if torch.cuda.is_available():
         activities.append(ProfilerActivity.CUDA)
 
     logger.info(f"[{config_key}] Profiling ({profile_steps} steps)...")
@@ -341,7 +286,6 @@ def profile_inference_fixed(
         with_flops=True,
         with_stack=with_stack,
         with_modules=False,
-        acc_events=True,    # accumulate events across all profile_steps (not just last step)
     ) as prof:
         for step in range(profile_steps):
             with record_function(f"inference_step_{step}"):
@@ -380,9 +324,8 @@ def profile_inference_fixed(
     avg_ms = float(np.mean(timing_ms_list))
     tps    = n_tokens / (avg_ms / 1000) if avg_ms > 0 else 0.0
 
-    # Use nvidia-smi for memory — torch allocator undercounts for GPTQ/AWQ
-    # which allocate some buffers outside PyTorch's caching allocator.
-    mem_gb = get_gpu_mem_gb()
+    # Peak memory tracked via torch.cuda (unaffected by profile_memory=False)
+    mem_gb = torch.cuda.max_memory_allocated() / 1e9 if torch.cuda.is_available() else 0.0
 
     key_avgs = prof.key_averages()
 
@@ -409,24 +352,21 @@ def profile_inference_fixed(
         top_kernels_raw = sorted(cuda_events, key=lambda e: e.cpu_time_total, reverse=True)[:10]
         kernel_time_key = "cpu_time_total"
 
-    # acc_events=True means key_averages() accumulates across ALL profile_steps.
-    # Divide by profile_steps to get per-step averages.
+    # key_averages() accumulates across ALL profile_steps — divide for per-step values
     avg_cuda_us        = total_cuda_us / profile_steps
     total_flops_all    = sum(getattr(e, "flops", 0) or 0 for e in key_avgs)
     avg_flops_per_step = total_flops_all / profile_steps
 
+    # Warn when flops=0 — expected for quantized kernels (GPTQ/AWQ/NF4)
+    # which are custom CUDA ops unknown to PyTorch's flops estimator.
     if total_flops_all == 0:
         logger.warning(
             f"  [{config_key}] total_flops=0 — PyTorch flops counter does not support "
-            f"custom quant kernels (GPTQ/AWQ/NF4). Using analytical roofline instead."
+            f"custom quant kernels (GPTQ/AWQ/NF4). arithmetic_intensity will be 0."
         )
 
-    # ── Roofline (analytical) ─────────────────────────────────────────────────
-    # PyTorch measured FLOPs=0 for all quantized kernels, so we use the
-    # analytical formula: AI_decode = 2 / bytes_per_weight.
-    # This is independent of the profiler and correct for all configs.
-    gpu_specs = detect_gpu_specs()
-    roofline  = analytical_roofline(cfg["bits"], mem_gb, gpu_specs)
+    # Arithmetic intensity: per-step FLOPs / peak bytes allocated (approximate proxy).
+    arith_intensity = avg_flops_per_step / (mem_gb * 1e9) if mem_gb > 0 else 0.0
 
     def _kern_time(e):
         return getattr(e, kernel_time_key)
@@ -450,13 +390,8 @@ def profile_inference_fixed(
             "total_cuda_ms":        total_cuda_us / 1e3,
             "avg_flops_per_step":   float(avg_flops_per_step),
             "total_flops":          float(total_flops_all),
-            # arithmetic_intensity from measured FLOPs — will be 0 for quant configs.
-            # Use roofline.ai_decode instead for roofline plots (always valid).
-            "arithmetic_intensity": float(avg_flops_per_step / (mem_gb * 1e9)) if mem_gb > 0 else 0.0,
+            "arithmetic_intensity": float(arith_intensity),
         },
-        # Analytical roofline — valid for all configs including quantized ones.
-        # ai_decode = 2 / bytes_per_weight (independent of measured FLOPs).
-        "roofline": roofline,
         "top_kernels": [
             {
                 "name":         e.key,
@@ -470,8 +405,7 @@ def profile_inference_fixed(
 
     logger.info(
         f"  [{config_key}] {avg_ms:.1f} ms avg | {tps:.1f} tok/s | "
-        f"{mem_gb:.2f} GB peak | CUDA {result['compute']['avg_cuda_ms']:.1f} ms/step | "
-        f"AI(decode)={roofline['ai_decode']:.2f} FLOPs/B [{roofline['bound_decode']}]"
+        f"{mem_gb:.2f} GB peak | CUDA {result['compute']['avg_cuda_ms']:.1f} ms/step"
     )
     logger.info("  Top 3 kernels (per-step avg):")
     for k in result["top_kernels"][:3]:
@@ -490,10 +424,7 @@ def profile_inference_fixed(
             "profiler/peak_gpu_gb":       result["memory"]["peak_gpu_gb"],
             "profiler/avg_cuda_ms":       result["compute"]["avg_cuda_ms"],
             "profiler/total_flops":       result["compute"]["total_flops"],
-            "roofline/ai_decode":         roofline["ai_decode"],
-            "roofline/ai_prefill":        roofline["ai_prefill"],
-            "roofline/bound_decode":      roofline["bound_decode"],
-            "roofline/ridge_point":       roofline["ridge_point"],
+            "profiler/arith_intensity":   result["compute"]["arithmetic_intensity"],
         })
         if result.get("top_kernels"):
             kernel_table = wandb.Table(
@@ -535,6 +466,11 @@ def run_profiler_sweep(
     results       = {}
     output_dir    = Path(output_dir)
     wandb_run_ids = wandb_run_ids or {}
+
+    # Probe Kineto BEFORE any model is loaded — this is the only reliable way
+    # to ensure Kineto's CUDA activity collector attaches to the CUDA context.
+    # Once a large model has been loaded and run, Kineto can no longer attach.
+    kineto_active = _probe_kineto()
 
     for config_key in config_keys:
         if config_key not in MODEL_REGISTRY:
