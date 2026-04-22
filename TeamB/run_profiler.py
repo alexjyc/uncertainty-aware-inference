@@ -105,21 +105,26 @@ def load_model_for_profiling(config_key: str):
         )
 
     elif quant_type == "gptq":
+        # AutoModelForCausalLM detects GPTQ config and routes through
+        # transformers built-in GPTQ quantizer which requires optimum AND
+        # still fails on many builds. Use gptqmodel directly instead.
+        from gptqmodel import GPTQModel
         revision = cfg.get("gptq_revision", "main")
         logger.info(f"  GPTQ revision: {revision}")
-        model = AutoModelForCausalLM.from_pretrained(
+        model = GPTQModel.from_quantized(
             hf_id,
             revision=revision,
-            device_map="auto",
-            torch_dtype=torch.float16,
+            device="cuda:0",
             trust_remote_code=True,
         )
 
     elif quant_type == "awq":
-        model = AutoModelForCausalLM.from_pretrained(
+        # Use AutoAWQForCausalLM directly to avoid mis-routing through
+        # transformers. fuse_layers=False required for torch.profiler tracing.
+        from awq import AutoAWQForCausalLM
+        model = AutoAWQForCausalLM.from_quantized(
             hf_id,
-            device_map="auto",
-            torch_dtype=torch.float16,
+            fuse_layers=False,
             trust_remote_code=True,
         )
 
