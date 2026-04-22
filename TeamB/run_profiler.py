@@ -39,11 +39,35 @@ Usage:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
 
+import os
+import sys
+
+# ── CUPTI must be on LD_LIBRARY_PATH before torch is imported ────────────────
+# PyTorch's Kineto backend dlopen()s libcupti.so at import time to enable
+# GPU kernel tracing (ProfilerActivity.CUDA). On Colab/A100 the library exists
+# but is not on the default path, so Kineto silently falls back to CPU-only
+# and kineto_results stays None. Prepend the path here, before torch import.
+_CUPTI_PATHS = [
+    "/usr/local/cuda/extras/CUPTI/lib64",
+    "/usr/local/cuda/lib64",
+    "/usr/lib/x86_64-linux-gnu",
+]
+_existing_ld = os.environ.get("LD_LIBRARY_PATH", "")
+_extra = ":".join(p for p in _CUPTI_PATHS if os.path.isdir(p))
+if _extra:
+    os.environ["LD_LIBRARY_PATH"] = _extra + (":" + _existing_ld if _existing_ld else "")
+
+# Disable Kineto daemon mode — causes attach failures on Colab where
+# /tmp permissions block the Unix socket Kineto uses for IPC.
+os.environ["KINETO_USE_DAEMON"] = "0"
+# Tell Kineto to use synchronous collection (more reliable on single-GPU nodes)
+os.environ["CUDA_LAUNCH_BLOCKING"] = "0"  # keep async launches for perf
+os.environ["KINETO_DAEMON_INIT_WAIT_USECS"] = "50000"
+
 import argparse
 import gc
 import json
 import logging
-import os
 import time
 from pathlib import Path
 
@@ -80,25 +104,31 @@ logger = logging.getLogger(__name__)
 
 def _probe_kineto() -> bool:
     """
-    Run a tiny profiler context BEFORE any model is loaded to bind
-    Kineto to the CUDA context while it is still fresh.
-
-    On Colab/A100, if a model is loaded first (which allocates large
-    CUDA tensors and runs kernels), Kineto's CUDA activity collector
-    can no longer attach and kineto_results stays None forever.
-
-    Returns True if Kineto CUDA is confirmed working, False otherwise.
+    Verify Kineto CUDA is working by running a tiny profiler context.
+    Must be called BEFORE any model is loaded.
+    Returns True if real GPU kernel stats are available, False otherwise.
     """
     if not torch.cuda.is_available():
         return False
 
-    # Ensure a CUDA context exists
+    # Log which CUPTI paths were found — helps diagnose failures
+    import glob
+    cupti_libs = glob.glob("/usr/local/cuda*/**/libcupti.so*", recursive=True)
+    if cupti_libs:
+        logger.info(f"  CUPTI found: {cupti_libs[0]}")
+    else:
+        logger.warning(
+            "  libcupti.so not found under /usr/local/cuda. "
+            "GPU kernel tracing requires CUPTI. "
+            "On Colab: Runtime → Factory reset, or run: "
+            "apt-get install -y cuda-cupti-$(nvcc --version | grep -oP '(?<=release )\\d+\\.\\d+' | tr . -)"
+        )
+
+    # Ensure CUDA context is alive
     _ = torch.zeros(1, device="cuda")
     torch.cuda.synchronize()
 
-    # Disable the daemon mode that causes attach failures on some builds
-    os.environ.setdefault("KINETO_USE_DAEMON", "0")
-
+    import tempfile
     try:
         with profile(
             activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
@@ -114,20 +144,30 @@ def _probe_kineto() -> bool:
             )
             torch.cuda.synchronize()
 
-        # Try to export — if kineto_results is None this will raise AttributeError
-        import tempfile, os as _os
-        with tempfile.NamedTemporaryFile(suffix=".json", delete=True) as tmp:
-            _prof.export_chrome_trace(tmp.name)
+        # Verify kineto_results is not None by attempting export
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tmp:
+            tmp_path = tmp.name
+        _prof.export_chrome_trace(tmp_path)
+        os.unlink(tmp_path)
 
-        logger.info("Kineto CUDA backend: active (GPU kernel stats available)")
-        return True
+        # Confirm at least one event has cuda_time_total
+        avgs = _prof.key_averages()
+        has_cuda = any(hasattr(e, "cuda_time_total") and e.cuda_time_total > 0 for e in avgs)
+        if has_cuda:
+            logger.info("Kineto CUDA backend: ACTIVE — real GPU kernel stats available")
+            return True
+        else:
+            logger.warning(
+                "Kineto CUDA backend: export succeeded but no cuda_time_total events found. "
+                "Kernel stats will be CPU-side times."
+            )
+            return False
 
     except AttributeError:
         logger.warning(
-            "Kineto CUDA backend: NOT active on this build. "
-            "Kernel stats will use CPU-side times. "
-            "To fix: reinstall PyTorch with Kineto support: "
-            "pip install torch --index-url https://download.pytorch.org/whl/cu121"
+            "Kineto CUDA backend: NOT active (kineto_results=None). "
+            "Check LD_LIBRARY_PATH includes CUPTI and rerun. "
+            "LD_LIBRARY_PATH=" + os.environ.get("LD_LIBRARY_PATH", "(not set)")
         )
         return False
 
