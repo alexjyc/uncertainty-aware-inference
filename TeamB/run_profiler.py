@@ -150,9 +150,16 @@ def _probe_kineto() -> bool:
         _prof.export_chrome_trace(tmp_path)
         os.unlink(tmp_path)
 
-        # Confirm at least one event has cuda_time_total
+        # Confirm at least one event has non-zero GPU time
+        # (attribute name changed across PyTorch versions)
         avgs = _prof.key_averages()
-        has_cuda = any(hasattr(e, "cuda_time_total") and e.cuda_time_total > 0 for e in avgs)
+        def _any_cuda(e):
+            for attr in ("cuda_time_total", "self_cuda_time_total", "device_time_total"):
+                v = getattr(e, attr, None)
+                if v and v > 0:
+                    return True
+            return False
+        has_cuda = any(_any_cuda(e) for e in avgs)
         if has_cuda:
             logger.info("Kineto CUDA backend: ACTIVE — real GPU kernel stats available")
             return True
@@ -369,47 +376,51 @@ def profile_inference_fixed(
 
     key_avgs = prof.key_averages()
 
-    # When Kineto CUDA backend fails to init, FunctionEventAvg objects only have
-    # cpu_time_total — cuda_time_total does not exist. Detect which mode we are in
-    # and fall back gracefully so the JSON is always written.
-    sample = key_avgs[0] if key_avgs else None
-    has_cuda_times = sample is not None and hasattr(sample, "cuda_time_total")
+    # Resolve the correct CUDA time attribute — it changed across PyTorch versions.
+    # PyTorch < 2.1 : cuda_time_total
+    # PyTorch >= 2.1: cuda_time_total was removed; use self_cuda_time_total instead
+    # We try each in order and pick the first one that exists AND has non-zero values.
+    def _get_cuda_time(e):
+        for attr in ("cuda_time_total", "self_cuda_time_total", "device_time_total"):
+            v = getattr(e, attr, None)
+            if v is not None:
+                return v
+        return 0.0
+
+    # Determine whether we have real GPU times by checking if any event
+    # has a non-zero value from the CUDA time attribute chain.
+    sample_cuda_times = [_get_cuda_time(e) for e in key_avgs]
+    has_cuda_times    = any(v > 0 for v in sample_cuda_times)
 
     if has_cuda_times:
-        # Normal path: Kineto CUDA active, use CUDA kernel times
-        cuda_events     = [e for e in key_avgs if e.cuda_time_total > 0]
-        total_cuda_us   = sum(e.cuda_time_total for e in cuda_events)
-        top_kernels_raw = sorted(cuda_events, key=lambda e: e.cuda_time_total, reverse=True)[:10]
-        kernel_time_key = "cuda_time_total"
+        logger.info(f"  [{config_key}] Kineto CUDA active — using real GPU kernel times")
+        cuda_events     = [e for e in key_avgs if _get_cuda_time(e) > 0]
+        total_cuda_us   = sum(_get_cuda_time(e) for e in cuda_events)
+        top_kernels_raw = sorted(cuda_events, key=_get_cuda_time, reverse=True)[:10]
     else:
-        # Fallback path: Kineto CUDA not available, use CPU-side times instead
         logger.warning(
-            f"  [{config_key}] cuda_time_total unavailable (Kineto CUDA backend not active). "
-            f"Falling back to cpu_time_total for kernel stats."
+            f"  [{config_key}] No GPU kernel times found — falling back to cpu_time_total. "
+            f"Kernel stats will reflect CPU-side scheduling, not actual GPU execution."
         )
         cuda_events     = [e for e in key_avgs if e.cpu_time_total > 0]
         total_cuda_us   = sum(e.cpu_time_total for e in cuda_events)
         top_kernels_raw = sorted(cuda_events, key=lambda e: e.cpu_time_total, reverse=True)[:10]
-        kernel_time_key = "cpu_time_total"
 
     # key_averages() accumulates across ALL profile_steps — divide for per-step values
     avg_cuda_us        = total_cuda_us / profile_steps
     total_flops_all    = sum(getattr(e, "flops", 0) or 0 for e in key_avgs)
     avg_flops_per_step = total_flops_all / profile_steps
 
-    # Warn when flops=0 — expected for quantized kernels (GPTQ/AWQ/NF4)
-    # which are custom CUDA ops unknown to PyTorch's flops estimator.
     if total_flops_all == 0:
         logger.warning(
             f"  [{config_key}] total_flops=0 — PyTorch flops counter does not support "
             f"custom quant kernels (GPTQ/AWQ/NF4). arithmetic_intensity will be 0."
         )
 
-    # Arithmetic intensity: per-step FLOPs / peak bytes allocated (approximate proxy).
     arith_intensity = avg_flops_per_step / (mem_gb * 1e9) if mem_gb > 0 else 0.0
 
-    def _kern_time(e):
-        return getattr(e, kernel_time_key)
+    def _kern_time_us(e):
+        return _get_cuda_time(e) if has_cuda_times else e.cpu_time_total
 
     result = {
         "config_key":   config_key,
@@ -435,8 +446,8 @@ def profile_inference_fixed(
         "top_kernels": [
             {
                 "name":         e.key,
-                "cuda_time_ms": _kern_time(e) / profile_steps / 1e3,
-                "pct":          _kern_time(e) / total_cuda_us * 100 if total_cuda_us else 0,
+                "cuda_time_ms": _kern_time_us(e) / profile_steps / 1e3,
+                "pct":          _kern_time_us(e) / total_cuda_us * 100 if total_cuda_us else 0,
                 "calls":        e.count // profile_steps,
             }
             for e in top_kernels_raw
