@@ -1,0 +1,16 @@
+{
+  "config_key": "mistral-7b-gptq-int4",
+  "model": "TheBloke/Mistral-7B-Instruct-v0.2-GPTQ",
+  "quantization": null,
+  "revision": "main",
+  "kernel": "gptq_marlin",
+  "avg_tok_per_sec": 1677.08,
+  "iter_tok_per_sec": [
+    1677.69,
+    1676.24,
+    1677.31
+  ],
+  "peak_gpu_mem_gb": 71.74,
+  "n_prompts": 10,
+  "n_output_tokens": 128
+}

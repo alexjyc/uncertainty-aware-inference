@@ -28,8 +28,8 @@ except ImportError:
 _PROJECT_ROOT = os.path.join(os.path.dirname(__file__), "..")
 RESULTS_DIRS = [
     os.path.join(_PROJECT_ROOT, "TeamA", "results"),
-    os.path.join(_PROJECT_ROOT, "TeamB", "results"),
-    os.path.join(_PROJECT_ROOT, "TeamC", "results"),
+    os.path.join(_PROJECT_ROOT, "TeamB", "calibration_results"),
+    os.path.join(_PROJECT_ROOT, "TeamC", "updated_results"),
 ]
 
 
@@ -39,7 +39,7 @@ def load_cross_team_results(results_dirs: list[str]) -> pd.DataFrame:
     """Load all JSON summary files from all teams into a single DataFrame."""
     rows = []
     for d in results_dirs:
-        for path in glob.glob(os.path.join(d, "*.json")):
+        for path in glob.glob(os.path.join(d, "**", "*.json"), recursive=True):
             with open(path) as f:
                 rows.append(json.load(f))
     if not rows:

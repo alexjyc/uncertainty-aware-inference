@@ -1,0 +1,17 @@
+{
+  "config_key": "mistral-7b-nf4",
+  "model": "mistralai/Mistral-7B-Instruct-v0.2",
+  "quantization": "nf4_bitsandbytes",
+  "revision": null,
+  "kernel": "bitsandbytes_HF_batched",
+  "avg_tok_per_sec": 89.18,
+  "iter_tok_per_sec": [
+    89.58,
+    88.58,
+    89.38
+  ],
+  "peak_gpu_mem_gb": 4.887,
+  "n_prompts": 10,
+  "n_output_tokens": 128,
+  "note": "HF batched fallback \u2014 vLLM does not support bitsandbytes NF4"
+}

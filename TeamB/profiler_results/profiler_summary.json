@@ -1,0 +1,452 @@
+{
+  "mistral-7b-fp16": {
+    "config_key": "mistral-7b-fp16",
+    "hf_id": "mistralai/Mistral-7B-Instruct-v0.2",
+    "quant_type": "fp16",
+    "bits": 16,
+    "kineto_cuda": true,
+    "timing": {
+      "total_inference_ms": 3813.9210966000064,
+      "tokens_per_second": 13.109867439201473,
+      "all_step_ms": [
+        3819.5306659999915,
+        3774.4419599998764,
+        3858.6769610001284,
+        3814.8492719997193,
+        3802.1066240003165
+      ]
+    },
+    "memory": {
+      "peak_gpu_gb": 14.500045824
+    },
+    "compute": {
+      "avg_cuda_ms": 7772.612832200426,
+      "total_cuda_ms": 38863.06416100213,
+      "avg_flops_per_step": 836767758453.0,
+      "total_flops": 4183838792265.0,
+      "arithmetic_intensity": 57.707938899614334
+    },
+    "top_kernels": [
+      {
+        "name": "aten::matmul",
+        "cuda_time_ms": 635.7951968000303,
+        "pct": 8.17994168146462,
+        "calls": 11300
+      },
+      {
+        "name": "aten::linear",
+        "cuda_time_ms": 635.6403310000317,
+        "pct": 8.177949226631966,
+        "calls": 11250
+      },
+      {
+        "name": "aten::mm",
+        "cuda_time_ms": 635.6403310000317,
+        "pct": 8.177949226631966,
+        "calls": 11250
+      },
+      {
+        "name": "ampere_fp16_s16816gemm_fp16_128x64_ldg8_f2f_stages_64x4_tn",
+        "cuda_time_ms": 322.4557691999754,
+        "pct": 4.1486148372668685,
+        "calls": 3250
+      },
+      {
+        "name": "ampere_fp16_s16816gemm_fp16_64x64_sliced1x2_ldg8_f2f_stages_64x6_tn",
+        "cuda_time_ms": 253.00183960000666,
+        "pct": 3.255042352706276,
+        "calls": 4800
+      },
+      {
+        "name": "aten::mul",
+        "cuda_time_ms": 57.09084320006824,
+        "pct": 0.7345128907431484,
+        "calls": 14700
+      },
+      {
+        "name": "std::enable_if<!(false), void>::type internal::gemvx::kernel<int, int, __half, __half, __half, float, false, true, true, false, 7, false, cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<__half const>, cublasGemvTensorStridedBatched<__half const>, cublasGemvTensorStridedBatched<__half>, float> >(cublasGemvParamsEx<int, cublasGemvTensorStridedBatched<__half const>, cublasGemvTensorStridedBatched<__half const>, cublasGemvTensorStridedBatched<__half>, float>)",
+        "cuda_time_ms": 39.98069800004005,
+        "pct": 0.5143791265970149,
+        "calls": 3136
+      },
+      {
+        "name": "aten::cat",
+        "cuda_time_ms": 37.18091580000657,
+        "pct": 0.47835800653768895,
+        "calls": 6600
+      },
+      {
+        "name": "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<c10::Half, c10::Half, c10::Half, at::native::binary_internal::MulFunctor<float> > >(at::TensorIteratorBase&, at::native::BinaryFunctor<c10::Half, c10::Half, c10::Half, at::native::binary_internal::MulFunctor<float> > const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<c10::Half, c10::Half, c10::Half, at::native::binary_internal::MulFunctor<float> > >(at::TensorIteratorBase&, at::native::BinaryFunctor<c10::Half, c10::Half, c10::Half, at::native::binary_internal::MulFunctor<float> > const&)::{lambda(int)#1})",
+        "cuda_time_ms": 30.49056960005882,
+        "pct": 0.39228210973975586,
+        "calls": 6465
+      },
+      {
+        "name": "aten::add",
+        "cuda_time_ms": 27.718850199955273,
+        "pct": 0.356622036866695,
+        "calls": 9800
+      }
+    ]
+  },
+  "mistral-7b-gptq-int4": {
+    "config_key": "mistral-7b-gptq-int4",
+    "hf_id": "TheBloke/Mistral-7B-Instruct-v0.2-GPTQ",
+    "quant_type": "gptq",
+    "bits": 4,
+    "kineto_cuda": true,
+    "timing": {
+      "total_inference_ms": 6245.158596400142,
+      "tokens_per_second": 8.006201800675036,
+      "all_step_ms": [
+        6263.4143390000645,
+        6237.608742000248,
+        6267.310269000063,
+        6184.812865000367,
+        6272.646766999969
+      ]
+    },
+    "memory": {
+      "peak_gpu_gb": 4.28981248
+    },
+    "compute": {
+      "avg_cuda_ms": 13737.008275799566,
+      "total_cuda_ms": 68685.04137899783,
+      "avg_flops_per_step": 836767758453.0,
+      "total_flops": 4183838792265.0,
+      "arithmetic_intensity": 195.0592857739553
+    },
+    "top_kernels": [
+      {
+        "name": "QuantLinearFunction",
+        "cuda_time_ms": 1745.1700532000903,
+        "pct": 12.70414939091614,
+        "calls": 11200
+      },
+      {
+        "name": "dequant_kernel",
+        "cuda_time_ms": 1032.1243274000867,
+        "pct": 7.513457855436953,
+        "calls": 11200
+      },
+      {
+        "name": "aten::matmul",
+        "cuda_time_ms": 722.9061479999947,
+        "pct": 5.26247151844216,
+        "calls": 11300
+      },
+      {
+        "name": "aten::mm",
+        "cuda_time_ms": 722.7536816000029,
+        "pct": 5.261361623209293,
+        "calls": 11250
+      },
+      {
+        "name": "ampere_bf16_s16816gemm_bf16_256x64_ldg8_f2f_stages_64x3_nn",
+        "cuda_time_ms": 345.5704048000487,
+        "pct": 2.515616194312402,
+        "calls": 3232
+      },
+      {
+        "name": "ampere_bf16_s16816gemm_bf16_128x64_ldg8_f2f_stages_32x6_nn",
+        "cuda_time_ms": 164.4304164000216,
+        "pct": 1.196988551646271,
+        "calls": 1568
+      },
+      {
+        "name": "ampere_bf16_s16816gemm_bf16_64x64_sliced1x2_ldg8_f2f_stages_64x5_nn",
+        "cuda_time_ms": 135.4738445999867,
+        "pct": 0.9861961344134184,
+        "calls": 3136
+      },
+      {
+        "name": "aten::mul",
+        "cuda_time_ms": 56.348250999946124,
+        "pct": 0.41019303380063193,
+        "calls": 14700
+      },
+      {
+        "name": "aten::cat",
+        "cuda_time_ms": 36.66724839991882,
+        "pct": 0.2669231004578731,
+        "calls": 6600
+      },
+      {
+        "name": "ampere_bf16_s16816gemm_bf16_128x64_ldg8_f2f_stages_64x4_nn",
+        "cuda_time_ms": 32.76786540000681,
+        "pct": 0.23853713080841502,
+        "calls": 3136
+      }
+    ]
+  },
+  "mistral-7b-gptq-int8": {
+    "config_key": "mistral-7b-gptq-int8",
+    "hf_id": "TheBloke/Mistral-7B-Instruct-v0.2-GPTQ",
+    "quant_type": "gptq",
+    "bits": 8,
+    "kineto_cuda": true,
+    "timing": {
+      "total_inference_ms": 6319.101559799856,
+      "tokens_per_second": 7.912517234741776,
+      "all_step_ms": [
+        6368.687150999904,
+        6306.475422999938,
+        6290.086199999678,
+        6291.74071999978,
+        6338.51830499998
+      ]
+    },
+    "memory": {
+      "peak_gpu_gb": 7.806736384
+    },
+    "compute": {
+      "avg_cuda_ms": 13731.317777000044,
+      "total_cuda_ms": 68656.58888500021,
+      "avg_flops_per_step": 836767758453.0,
+      "total_flops": 4183838792265.0,
+      "arithmetic_intensity": 107.18534830610722
+    },
+    "top_kernels": [
+      {
+        "name": "QuantLinearFunction",
+        "cuda_time_ms": 1723.7122595999583,
+        "pct": 12.553145208591534,
+        "calls": 11200
+      },
+      {
+        "name": "dequant_kernel",
+        "cuda_time_ms": 1018.3916707999455,
+        "pct": 7.416561813941495,
+        "calls": 11200
+      },
+      {
+        "name": "aten::matmul",
+        "cuda_time_ms": 715.2296792000028,
+        "pct": 5.208747556611155,
+        "calls": 11300
+      },
+      {
+        "name": "aten::mm",
+        "cuda_time_ms": 715.0761374000076,
+        "pct": 5.2076293696862805,
+        "calls": 11250
+      },
+      {
+        "name": "ampere_bf16_s16816gemm_bf16_256x64_ldg8_f2f_stages_64x3_nn",
+        "cuda_time_ms": 341.8016659999802,
+        "pct": 2.4892124088228296,
+        "calls": 3232
+      },
+      {
+        "name": "ampere_bf16_s16816gemm_bf16_128x64_ldg8_f2f_stages_32x6_nn",
+        "cuda_time_ms": 161.98224940000085,
+        "pct": 1.1796555292844588,
+        "calls": 1568
+      },
+      {
+        "name": "ampere_bf16_s16816gemm_bf16_64x64_sliced1x2_ldg8_f2f_stages_64x5_nn",
+        "cuda_time_ms": 133.9215892000072,
+        "pct": 0.9753003417073766,
+        "calls": 3136
+      },
+      {
+        "name": "aten::mul",
+        "cuda_time_ms": 55.943193000025595,
+        "pct": 0.40741314059259803,
+        "calls": 14700
+      },
+      {
+        "name": "aten::cat",
+        "cuda_time_ms": 36.77642280007062,
+        "pct": 0.26782879398269505,
+        "calls": 6600
+      },
+      {
+        "name": "ampere_bf16_s16816gemm_bf16_128x64_ldg8_f2f_stages_64x4_nn",
+        "cuda_time_ms": 32.77265439998451,
+        "pct": 0.2386708612546911,
+        "calls": 3136
+      }
+    ]
+  },
+  "mistral-7b-awq-int4": {
+    "config_key": "mistral-7b-awq-int4",
+    "hf_id": "TheBloke/Mistral-7B-Instruct-v0.2-AWQ",
+    "quant_type": "awq",
+    "bits": 4,
+    "kineto_cuda": true,
+    "timing": {
+      "total_inference_ms": 5488.475742199898,
+      "tokens_per_second": 9.109997447116152,
+      "all_step_ms": [
+        5482.641016999878,
+        5451.5537909996965,
+        5484.248835000017,
+        5504.006666999885,
+        5519.928401000016
+      ]
+    },
+    "memory": {
+      "peak_gpu_gb": 4.16737792
+    },
+    "compute": {
+      "avg_cuda_ms": 9093.092586400588,
+      "total_cuda_ms": 45465.46293200294,
+      "avg_flops_per_step": 13207779445.0,
+      "total_flops": 66038897225.0,
+      "arithmetic_intensity": 3.169326060306045
+    },
+    "top_kernels": [
+      {
+        "name": "WQLinearMMFunction",
+        "cuda_time_ms": 903.9798104000785,
+        "pct": 9.941390146538803,
+        "calls": 11200
+      },
+      {
+        "name": "awq_gemm_kernel",
+        "cuda_time_ms": 878.9825866000742,
+        "pct": 9.666486712283778,
+        "calls": 11200
+      },
+      {
+        "name": "aten::mul",
+        "cuda_time_ms": 56.300078800131146,
+        "pct": 0.6191521560479016,
+        "calls": 14700
+      },
+      {
+        "name": "aten::cat",
+        "cuda_time_ms": 37.09412799996997,
+        "pct": 0.40793742775089586,
+        "calls": 6600
+      },
+      {
+        "name": "void at::native::elementwise_kernel<128, 4, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<c10::Half, c10::Half, c10::Half, at::native::binary_internal::MulFunctor<float> > >(at::TensorIteratorBase&, at::native::BinaryFunctor<c10::Half, c10::Half, c10::Half, at::native::binary_internal::MulFunctor<float> > const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::BinaryFunctor<c10::Half, c10::Half, c10::Half, at::native::binary_internal::MulFunctor<float> > >(at::TensorIteratorBase&, at::native::BinaryFunctor<c10::Half, c10::Half, c10::Half, at::native::binary_internal::MulFunctor<float> > const&)::{lambda(int)#1})",
+        "cuda_time_ms": 30.087176200081792,
+        "pct": 0.330879466080434,
+        "calls": 6465
+      },
+      {
+        "name": "aten::add",
+        "cuda_time_ms": 27.03223519999748,
+        "pct": 0.29728318438576384,
+        "calls": 9800
+      },
+      {
+        "name": "aten::copy_",
+        "cuda_time_ms": 26.998047999990415,
+        "pct": 0.29690721548758947,
+        "calls": 7021
+      },
+      {
+        "name": "aten::to",
+        "cuda_time_ms": 26.484791199988173,
+        "pct": 0.2912627464015729,
+        "calls": 21572
+      },
+      {
+        "name": "aten::_to_copy",
+        "cuda_time_ms": 26.484791199988173,
+        "pct": 0.2912627464015729,
+        "calls": 6817
+      },
+      {
+        "name": "aten::fill_",
+        "cuda_time_ms": 25.11660680001403,
+        "pct": 0.2762163319174582,
+        "calls": 11402
+      }
+    ]
+  },
+  "mistral-7b-nf4": {
+    "config_key": "mistral-7b-nf4",
+    "hf_id": "mistralai/Mistral-7B-Instruct-v0.2",
+    "quant_type": "nf4",
+    "bits": 4,
+    "kineto_cuda": true,
+    "timing": {
+      "total_inference_ms": 7629.404445600085,
+      "tokens_per_second": 6.553591483649192,
+      "all_step_ms": [
+        7556.965938999383,
+        7472.419346000606,
+        7721.154725000815,
+        7658.949802999814,
+        7737.532414999805
+      ]
+    },
+    "memory": {
+      "peak_gpu_gb": 4.376562688
+    },
+    "compute": {
+      "avg_cuda_ms": 11170.961965599641,
+      "total_cuda_ms": 55854.80982799821,
+      "avg_flops_per_step": 158137759861.0,
+      "total_flops": 790688799305.0,
+      "arithmetic_intensity": 36.13286753428539
+    },
+    "top_kernels": [
+      {
+        "name": "bitsandbytes::gemv_4bit",
+        "cuda_time_ms": 426.4389651999335,
+        "pct": 3.8173880325895713,
+        "calls": 10976
+      },
+      {
+        "name": "void kgemm_4bit_inference_naive<__half, 128, 16>(int, int, int, __half*, unsigned char*, float*, float const*, __half*, int, int, int, int)",
+        "cuda_time_ms": 426.4079173999334,
+        "pct": 3.817110099497545,
+        "calls": 10976
+      },
+      {
+        "name": "aten::copy_",
+        "cuda_time_ms": 199.7504427999481,
+        "pct": 1.7881221278442136,
+        "calls": 29645
+      },
+      {
+        "name": "aten::to",
+        "cuda_time_ms": 199.2355621999541,
+        "pct": 1.7835130297058477,
+        "calls": 44196
+      },
+      {
+        "name": "aten::_to_copy",
+        "cuda_time_ms": 199.2355621999541,
+        "pct": 1.7835130297058477,
+        "calls": 29441
+      },
+      {
+        "name": "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#10}::operator()() const::{lambda(c10::Half)#1}, std::array<char*, 2ul>, 4, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >(int, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#10}::operator()() const::{lambda(c10::Half)#1}, std::array<char*, 2ul>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1>)",
+        "cuda_time_ms": 104.69710720002101,
+        "pct": 0.9372255274203776,
+        "calls": 11424
+      },
+      {
+        "name": "aten::add",
+        "cuda_time_ms": 91.20398360006942,
+        "pct": 0.8164380460780999,
+        "calls": 20776
+      },
+      {
+        "name": "MatMul4Bit",
+        "cuda_time_ms": 75.5325458000092,
+        "pct": 0.6761507740569478,
+        "calls": 224
+      },
+      {
+        "name": "void at::native::unrolled_elementwise_kernel<at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}, std::array<char*, 2ul>, 4, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1> >(int, at::native::direct_copy_kernel_cuda(at::TensorIteratorBase&)::{lambda()#3}::operator()() const::{lambda()#12}::operator()() const::{lambda(c10::BFloat16)#1}, std::array<char*, 2ul>, TrivialOffsetCalculator<1, unsigned int>, TrivialOffsetCalculator<1, unsigned int>, at::native::memory::LoadWithCast<1>, at::native::memory::StoreWithCast<1>)",
+        "cuda_time_ms": 66.8581361999395,
+        "pct": 0.5984993629539286,
+        "calls": 11200
+      },
+      {
+        "name": "void at::native::elementwise_kernel<128, 2, at::native::gpu_kernel_impl_nocast<at::native::CUDAFunctor_add<float> >(at::TensorIteratorBase&, at::native::CUDAFunctor_add<float> const&)::{lambda(int)#1}>(int, at::native::gpu_kernel_impl_nocast<at::native::CUDAFunctor_add<float> >(at::TensorIteratorBase&, at::native::CUDAFunctor_add<float> const&)::{lambda(int)#1})",
+        "cuda_time_ms": 65.77125339999256,
+        "pct": 0.5887698266499474,
+        "calls": 11200
+      }
+    ]
+  }
+}

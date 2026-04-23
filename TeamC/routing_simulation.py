@@ -26,8 +26,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 _PROJECT_ROOT = os.path.join(os.path.dirname(__file__), "..")
 RESULTS_DIRS = [
     os.path.join(_PROJECT_ROOT, "TeamA", "results"),
-    os.path.join(_PROJECT_ROOT, "TeamB", "results"),
-    os.path.join(_PROJECT_ROOT, "TeamC", "results"),
+    os.path.join(_PROJECT_ROOT, "TeamB", "calibration_results"),
+    os.path.join(_PROJECT_ROOT, "TeamC", "updated_results"),
 ]
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "results", "routing")
 
@@ -38,7 +38,7 @@ def load_all_summaries(results_dirs: list[str]) -> pd.DataFrame:
     """Load all JSON summary files."""
     rows = []
     for d in results_dirs:
-        for path in glob.glob(os.path.join(d, "*.json")):
+        for path in glob.glob(os.path.join(d, "**", "*.json"), recursive=True):
             with open(path) as f:
                 rows.append(json.load(f))
     return pd.DataFrame(rows) if rows else pd.DataFrame()
@@ -49,8 +49,7 @@ def load_tensors(model: str, quant_method: str, precision: str,
     """Load .pt file for a specific config+dataset."""
     fname = f"{model}_{quant_method}_{precision}_{dataset}.pt"
     for d in results_dirs:
-        path = os.path.join(d, fname)
-        if os.path.exists(path):
+        for path in glob.glob(os.path.join(d, "**", fname), recursive=True):
             return torch.load(path, map_location="cpu", weights_only=True)
     return None
 
@@ -143,7 +142,7 @@ def find_fp16_baseline(summaries: pd.DataFrame, model: str,
                        dataset: str) -> dict | None:
     """Find the FP16 baseline row for a given model and dataset."""
     mask = ((summaries["model"] == model) &
-            (summaries["quant_method"] == "fp16") &
+            (summaries["quant_method"].isin(["fp16", "16bit"])) &
             (summaries["dataset"] == dataset))
     matches = summaries[mask]
     if matches.empty:
@@ -159,7 +158,7 @@ def simulate_all_pairs(summaries: pd.DataFrame, results_dirs: list[str],
     Returns dict keyed by (model, quant_method, precision, dataset) -> DataFrame.
     """
     all_results = {}
-    quantized = summaries[summaries["quant_method"] != "fp16"]
+    quantized = summaries[~summaries["quant_method"].isin(["fp16", "16bit"])]
 
     if dataset_filter:
         quantized = quantized[quantized["dataset"] == dataset_filter]
@@ -177,7 +176,8 @@ def simulate_all_pairs(summaries: pd.DataFrame, results_dirs: list[str],
 
         quant_tensors = load_tensors(model, qmethod, precision, dataset,
                                      results_dirs)
-        fp16_tensors = load_tensors(model, "fp16", "fp16", dataset,
+        fp16_tensors = load_tensors(model, fp16_info["quant_method"],
+                                    fp16_info["precision"], dataset,
                                     results_dirs)
 
         if quant_tensors is None or fp16_tensors is None:
