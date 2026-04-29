@@ -258,6 +258,9 @@ def run_nsys_profile(
     # "profiling_region" NVTX range emitted by run_profiler.py --nvtx.
     # Without this, nsys would capture model load and warmup too, bloating
     # the .nsys-rep and contaminating kernel timing statistics.
+    #
+    # --gpu-metrics-set requires --gpu-metrics-device to specify which GPU.
+    # We always use device 0 (single-GPU L4 instance).
     nsys_cmd = [
         nsys_bin, "profile",
         "--output",             str(output_dir / f"{config_key}_nsys"),
@@ -265,9 +268,8 @@ def run_nsys_profile(
         "--capture-range",      NSYS_CAPTURE_RANGE,
         "--nvtx-capture",       NSYS_NVTX_CAPTURE,
         "--force-overwrite",    "true",
-        "--stats",              "true",         # print summary to stdout after capture
-        "--gpu-metrics-set",    _detect_nsys_metrics_set(),  # auto-detected for the active GPU
-        "--export",             "sqlite",       # also write a .sqlite for programmatic queries
+        "--stats",              "true",
+        "--export",             "sqlite",
     ]
 
     # ── Append the Python command that nsys will wrap ──────────────────────
@@ -288,6 +290,20 @@ def run_nsys_profile(
     env = os.environ.copy()
     if hf_token:
         env["HF_TOKEN"] = hf_token
+
+    # nsys can strip LD_LIBRARY_PATH from the child process, causing
+    # libtorch_cuda.so (inside the torch pip package) to fail to load.
+    # We must explicitly add the torch lib directory so the dynamic linker
+    # finds it inside the nsys-launched subprocess.
+    try:
+        import torch as _torch
+        torch_lib = str(Path(_torch.__file__).parent / "lib")
+    except Exception:
+        torch_lib = ""
+    existing_ld = env.get("LD_LIBRARY_PATH", "")
+    extra_paths = ":".join(p for p in [torch_lib] if p)
+    if extra_paths:
+        env["LD_LIBRARY_PATH"] = extra_paths + (":" + existing_ld if existing_ld else "")
 
     logger.info("CMD: " + " ".join(full_cmd))
     t0 = time.perf_counter()

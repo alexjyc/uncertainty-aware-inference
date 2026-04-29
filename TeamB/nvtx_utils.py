@@ -1,72 +1,95 @@
 """
 nvtx_utils.py
 ─────────────────────────────────────────────────────────────────────────────
-NVTX (NVIDIA Tools Extension) annotations for Nsight Systems capture.
+NVTX annotations for Nsight Systems / Nsight Compute.
 
-Provides context managers that emit coloured range markers into the nsys
-timeline so that:
-  - nsys can restrict capture to just the profiling region (not warmup/load)
-  - ncu --nvtx-include targets only the generate() steps for kernel replay
-
-Falls back to no-ops silently when NVTX is unavailable (CPU-only machines,
-environments without torch.cuda.nvtx).
+API note: the nvtx PyPI package (>=0.2) uses push_range/pop_range, NOT the
+old start()/end() API which was removed in that version. This file handles
+both versions and falls back to torch.cuda.nvtx when the package is absent.
 ─────────────────────────────────────────────────────────────────────────────
 """
 
 import contextlib
 from typing import Optional
 
+# ── torch.cuda.nvtx — always available with CUDA PyTorch ────────────────────
 try:
-    import torch.cuda.nvtx as _nvtx
-    _NVTX_AVAILABLE = True
+    import torch.cuda.nvtx as _torch_nvtx
+    _TORCH_NVTX = True
 except ImportError:
-    _nvtx = None
-    _NVTX_AVAILABLE = False
+    _torch_nvtx = None
+    _TORCH_NVTX = False
+
+# ── nvtx PyPI package (optional) ─────────────────────────────────────────────
+# Current API (>=0.2): push_range / pop_range
+# Old API     (<0.2):  start / end  [removed — do not use]
+_NVTX_PKG     = False
+_NVTX_PKG_NEW = False
+_nvtx_pkg     = None
 
 try:
     import nvtx as _nvtx_pkg
-    _NVTX_PKG_AVAILABLE = True
+    if hasattr(_nvtx_pkg, "push_range"):
+        _NVTX_PKG = True
+        _NVTX_PKG_NEW = True
+    elif hasattr(_nvtx_pkg, "start"):
+        _NVTX_PKG = True
+        _NVTX_PKG_NEW = False
+    else:
+        _nvtx_pkg = None  # unknown version — ignore
 except ImportError:
     _nvtx_pkg = None
-    _NVTX_PKG_AVAILABLE = False
 
-NVTX_AVAILABLE: bool = _NVTX_AVAILABLE
+NVTX_AVAILABLE: bool = _TORCH_NVTX or _NVTX_PKG
 DOMAIN = "UAI_PROFILER"
 
 
 class Color:
-    GREEN  = 0x00FF00   # model load
-    YELLOW = 0xFFFF00   # warmup steps
-    CYAN   = 0x00FFFF   # profiling region (outer) — nsys/ncu capture this
-    BLUE   = 0x0000FF   # individual profiling step
-    RED    = 0xFF0000   # generate() call inside a step
-    WHITE  = 0xFFFFFF   # probe / misc
+    GREEN  = 0x00FF00
+    YELLOW = 0xFFFF00
+    CYAN   = 0x00FFFF
+    BLUE   = 0x0000FF
+    RED    = 0xFF0000
+    WHITE  = 0xFFFFFF
 
 
 @contextlib.contextmanager
 def NvtxRange(message: str, color: Optional[int] = None, domain: str = DOMAIN):
-    """Push an NVTX range on enter, pop on exit. No-op when NVTX unavailable."""
-    if not _NVTX_AVAILABLE:
-        yield
-        return
-    if _NVTX_PKG_AVAILABLE and color is not None:
-        rng = _nvtx_pkg.start(message, color=color, domain=domain)
+    """Push/pop an NVTX range. Falls back gracefully across backends."""
+    if _NVTX_PKG_NEW:
+        # Current nvtx API (>=0.2)
+        try:
+            _nvtx_pkg.push_range(message=message, color=color, domain=domain)
+            try:
+                yield
+            finally:
+                _nvtx_pkg.pop_range(domain=domain)
+        except TypeError:
+            # Some builds don't accept domain kwarg — retry without it
+            _nvtx_pkg.push_range(message=message, color=color)
+            try:
+                yield
+            finally:
+                _nvtx_pkg.pop_range()
+    elif _NVTX_PKG and not _NVTX_PKG_NEW:
+        # Old nvtx API (<0.2)
+        try:
+            rng = _nvtx_pkg.start(message)
+            try:
+                yield
+            finally:
+                _nvtx_pkg.end(rng)
+        except Exception:
+            yield
+    elif _TORCH_NVTX:
+        # torch.cuda.nvtx — no color/domain but always reliable
+        _torch_nvtx.range_push(message)
         try:
             yield
         finally:
-            _nvtx_pkg.end(rng)
+            _torch_nvtx.range_pop()
     else:
-        _nvtx.range_push(message)
-        try:
-            yield
-        finally:
-            _nvtx.range_pop()
-
-
-@contextlib.contextmanager
-def model_load_range(config_key: str):
-    with NvtxRange(f"model_load/{config_key}", color=Color.GREEN):
-        yield
+        yield  # no-op
 
 
 @contextlib.contextmanager
@@ -77,14 +100,7 @@ def warmup_range(step: int):
 
 @contextlib.contextmanager
 def profiling_region():
-    """
-    Outer NVTX range for the entire profiling block.
-
-    nsys restricts capture to this range via:
-        nsys profile --capture-range=nvtx --nvtx-capture="profiling_region"
-    ncu restricts kernel replay via:
-        ncu --nvtx --nvtx-include="profiling_region"
-    """
+    """Outer NVTX range. nsys/ncu capture-range targets this label."""
     with NvtxRange("profiling_region", color=Color.CYAN):
         yield
 
@@ -102,30 +118,21 @@ def generate_range(step: int, n_tokens: int):
 
 
 def probe_nvtx() -> dict:
-    """Check NVTX availability. Call at startup before using --nvtx flag."""
-    if not _NVTX_AVAILABLE:
-        return {
-            "available": False,
-            "backend": "none",
-            "domain_support": False,
-            "message": "torch.cuda.nvtx not available. Install CUDA PyTorch or: pip install nvtx",
-        }
-    backend = "nvtx_pkg" if _NVTX_PKG_AVAILABLE else "torch.cuda.nvtx"
+    """Check NVTX availability. Returns dict with available, backend, message."""
+    if not NVTX_AVAILABLE:
+        return {"available": False, "backend": "none",
+                "message": "No NVTX backend. pip install nvtx or use CUDA PyTorch."}
+    if _NVTX_PKG_NEW:
+        backend = "nvtx pkg (push_range/pop_range)"
+    elif _NVTX_PKG:
+        backend = "nvtx pkg (legacy start/end)"
+    else:
+        backend = "torch.cuda.nvtx"
     try:
-        with NvtxRange("nvtx_probe_test", color=Color.WHITE):
-            import torch
-            _ = torch.zeros(1)
-        return {
-            "available": True,
-            "backend": backend,
-            "domain_support": _NVTX_PKG_AVAILABLE,
-            "message": f"NVTX active ({backend}). Domain '{DOMAIN}' "
-                       f"{'supported' if _NVTX_PKG_AVAILABLE else 'not supported — pip install nvtx'}.",
-        }
+        with NvtxRange("probe", color=Color.WHITE):
+            pass
+        return {"available": True, "backend": backend,
+                "message": f"NVTX OK via {backend}"}
     except Exception as e:
-        return {
-            "available": False,
-            "backend": backend,
-            "domain_support": False,
-            "message": f"NVTX push/pop failed: {e}",
-        }
+        return {"available": False, "backend": backend,
+                "message": f"NVTX probe failed: {e}"}
