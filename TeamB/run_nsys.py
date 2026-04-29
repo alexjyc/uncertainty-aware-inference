@@ -133,67 +133,72 @@ def get_nsys_version(nsys_bin: str) -> str:
 
 def detect_gpu_architecture() -> dict:
     """
-    Detect the active GPU's architecture name and CUDA compute capability.
+    Detect the active GPU's architecture and return the correct nsys
+    --gpu-metrics-set value for it.
 
     Returns a dict:
-        {"name": "NVIDIA A100-SXM4-80GB", "arch": "ampere",
-         "cc": "8.0", "metrics_set": "ga10x-A100"}
+        {"name": "NVIDIA L4", "arch": "ada", "cc": "8.9", "metrics_set": "ad10x"}
 
-    Architecture → nsys --gpu-metrics-set mapping:
-        Ampere GA100 (A100)          → ga10x-A100
-        Ampere GA10x (A10, A30, A40) → ga10x
-        Ada Lovelace (L4, L40, 4090) → ad10x
-        Hopper (H100)                → gh100
-        Volta (V100)                 → gv100
-        Turing (T4)                  → tu10x
+    Architecture → nsys --gpu-metrics-set mapping (NVIDIA Nsight Systems docs):
+        Hopper  H100/H200         cc 9.0   → gh100
+        Ada     L4/L40/RTX 4090   cc 8.9   → ad10x
+        Ampere  A100 (GA100)      cc 8.0   → ga10x-A100
+        Ampere  A10/A30/A40/3090  cc 8.6   → ga10x
+        Turing  T4/RTX 20xx       cc 7.5   → tu10x
+        Volta   V100              cc 7.0   → gv100
 
-    The --gpu-metrics-set flag enables hardware performance counter collection
-    in the nsys timeline (SM occupancy, memory throughput, etc.).  It is
-    architecture-specific because each GPU generation exposes different counters.
-    If the wrong set is specified, nsys silently skips HW counter collection
-    rather than erroring out.
+    NOTE: This project runs on an L4 GCP instance (Ada Lovelace, cc=8.9).
+    The --gpu-metrics-set for L4 is 'ad10x'.
     """
     try:
         import torch
         name = torch.cuda.get_device_name(0)
-        cc   = torch.cuda.get_device_capability(0)  # e.g. (8, 0) for A100
+        cc   = torch.cuda.get_device_capability(0)   # e.g. (8, 9) for L4
         cc_str = f"{cc[0]}.{cc[1]}"
     except Exception:
-        return {"name": "unknown", "arch": "unknown", "cc": "unknown", "metrics_set": "ga10x-A100"}
+        # Safe default for this project's GCP L4 instance
+        return {"name": "unknown", "arch": "ada", "cc": "8.9", "metrics_set": "ad10x"}
 
     name_lower = name.lower()
     cc_major   = cc[0]
+    cc_minor   = cc[1]
 
-    # ── Architecture classification by compute capability + name ─────────────
+    # ── Architecture classification ──────────────────────────────────────────
+    # Order matters: check the most specific conditions first.
     if cc_major == 9:
-        # Hopper (H100, H200)
-        arch, metrics_set = "hopper",        "gh100"
-    elif cc_major == 8:
-        if "a100" in name_lower:
-            arch, metrics_set = "ampere_ga100", "ga10x-A100"   # GA100 has dedicated set
-        else:
-            # A10, A30, A40, A6000, A800, RTX 3090 (all GA10x)
-            arch, metrics_set = "ampere_ga10x", "ga10x"
-    elif cc_major == 7:
-        if cc[1] == 0:
-            arch, metrics_set = "volta",  "gv100"   # V100
-        else:
-            arch, metrics_set = "turing", "tu10x"   # T4, RTX 20xx
-    elif cc_major == 8 and "l4" in name_lower:
-        # L4 is Ada Lovelace (AD104), cc=(8,9) → caught by the ada check below
+        # Hopper: H100, H200
+        arch, metrics_set = "hopper", "gh100"
+
+    elif cc_major == 8 and cc_minor >= 9:
+        # Ada Lovelace: L4 (AD104), L40, RTX 4090, RTX 6000 Ada
+        # cc minor = 9 is the Ada indicator within the 8.x family.
+        # This branch MUST come before the generic cc_major==8 checks.
         arch, metrics_set = "ada", "ad10x"
+
+    elif cc_major == 8 and "a100" in name_lower:
+        # Ampere GA100: A100-SXM4-80GB, A100-SXM4-40GB, A100-PCIe
+        # GA100 has a dedicated metric set separate from other Ampere GPUs.
+        arch, metrics_set = "ampere_ga100", "ga10x-A100"
+
+    elif cc_major == 8:
+        # Ampere GA10x: A10, A30, A40, A6000, RTX 3090 (cc 8.6)
+        arch, metrics_set = "ampere_ga10x", "ga10x"
+
+    elif cc_major == 7 and cc_minor == 0:
+        # Volta: V100
+        arch, metrics_set = "volta", "gv100"
+
+    elif cc_major == 7:
+        # Turing: T4 (7.5), RTX 20xx
+        arch, metrics_set = "turing", "tu10x"
+
     else:
-        # Ada Lovelace: cc=(8,9) — L4, L40, RTX 40xx, RTX 6000 Ada
-        # cc major=8 minor≥9 indicates Ada on most driver versions
-        if cc_major == 8 and cc[1] >= 9:
-            arch, metrics_set = "ada", "ad10x"
-        else:
-            # Fallback — assume Ampere A100 (our primary platform)
-            arch, metrics_set = "ampere_ga100", "ga10x-A100"
-            logger.warning(
-                f"Unknown GPU architecture (cc={cc_str}, name='{name}'). "
-                f"Defaulting to ga10x-A100 metrics set — verify if correct."
-            )
+        # Unknown — fall back to Ada (this project's GPU)
+        arch, metrics_set = "ada", "ad10x"
+        logger.warning(
+            f"Unknown GPU architecture (cc={cc_str}, name='{name}'). "
+            f"Defaulting to ad10x (Ada/L4) metrics set."
+        )
 
     logger.info(
         f"GPU detected: {name}  |  compute capability {cc_str}  |  "
@@ -532,20 +537,17 @@ if __name__ == "__main__":
         logger.error(str(e))
         sys.exit(1)
 
-    # ── Detect GPU and confirm A100 (warn if different) ──────────────────────
+    # ── Detect GPU and confirm L4 (warn if different) ────────────────────────
     gpu_info = detect_gpu_architecture()
-    if gpu_info["arch"] != "ampere_ga100":
+    if gpu_info["arch"] != "ada":
         logger.warning(
-            f"Expected A100 (ampere_ga100) but detected arch='{gpu_info['arch']}' "
-            f"({gpu_info['name']}).  All profiling results and roofline values in this "
-            f"project are calibrated against A100-80GB.  The nsys metrics-set will be "
-            f"set to '{gpu_info['metrics_set']}' automatically, but throughput and "
-            f"bandwidth figures will differ from the project baseline."
+            f"Expected L4 (Ada Lovelace, arch=ada) but detected arch='{gpu_info['arch']}' "
+            f"({gpu_info['name']}).  Nsight profiling will proceed with metrics-set="
+            f"'{gpu_info['metrics_set']}', but roofline values in nsight_roofline.py "
+            f"must be run with --gpu matching the actual GPU."
         )
     else:
-        logger.info(
-            f"Confirmed A100.  nsys --gpu-metrics-set={gpu_info['metrics_set']}"
-        )
+        logger.info(f"Confirmed L4/Ada.  nsys --gpu-metrics-set={gpu_info['metrics_set']}")
 
     # ── Verify run_profiler.py is present ────────────────────────────────────
     profiler_script = repo_dir / "run_profiler.py"
