@@ -6,7 +6,7 @@ import torch
 import torch.cuda.nvtx as nvtx
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
-MODEL_ID       = "meta-llama/Llama-2-13b-chat-hf"
+MODEL_ID       = "meta-llama/Llama-2-13b-hf"
 TARGET_SEQ_LEN = 128
 PROMPT         = "The key difference between quantization and pruning is"
 

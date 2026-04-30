@@ -7,7 +7,7 @@ import torch.cuda.nvtx as nvtx
 from awq import AutoAWQForCausalLM
 from transformers import AutoTokenizer
 
-MODEL_ID       = "TheBloke/Llama-2-13b-Chat-AWQ"
+MODEL_ID       = "TheBloke/Llama-2-13B-AWQ"
 TARGET_SEQ_LEN = 128
 PROMPT         = "The key difference between quantization and pruning is"
 

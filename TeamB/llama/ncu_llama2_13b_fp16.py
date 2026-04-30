@@ -21,18 +21,18 @@ import torch
 import torch.cuda.nvtx as nvtx
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-MODEL_ID       = "meta-llama/Llama-2-13b-chat-hf"
+MODEL_ID       = "meta-llama/Llama-2-13b-hf"
 TARGET_SEQ_LEN = 128
 PROMPT         = "The key difference between quantization and pruning is"
 
 hf_token = os.environ.get("HF_TOKEN")
 print(f"[load] Loading {MODEL_ID} in FP16...")
 t0 = time.perf_counter()
-tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, token=hf_token)
+tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, )
 tokenizer.pad_token = tokenizer.eos_token
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_ID, torch_dtype=torch.float16,
-    device_map="cuda:0", token=hf_token,
+    device_map="cuda:0", ,
 )
 model.eval()
 print(f"[load] Done in {time.perf_counter()-t0:.1f}s  |  GPU mem: {torch.cuda.memory_allocated()/1e9:.1f} GB")

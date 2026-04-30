@@ -5,8 +5,8 @@ import torch.cuda.nvtx as nvtx
 from auto_gptq import AutoGPTQForCausalLM as GPTQModel
 from transformers import AutoTokenizer
 
-MODEL_ID       = "TheBloke/Llama-2-13b-Chat-GPTQ"
-REVISION       = "main"
+MODEL_ID       = "TheBloke/Llama-2-13B-GPTQ"
+REVISION       = "gptq-4bit-128g-actorder_True"
 TARGET_SEQ_LEN = 128
 PROMPT         = "The key difference between quantization and pruning is"
 
