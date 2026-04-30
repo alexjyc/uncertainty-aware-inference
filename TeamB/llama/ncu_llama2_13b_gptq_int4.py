@@ -2,7 +2,7 @@
 import os, time
 import torch
 import torch.cuda.nvtx as nvtx
-from gptqmodel import GPTQModel
+from auto_gptq import AutoGPTQForCausalLM as GPTQModel
 from transformers import AutoTokenizer
 
 MODEL_ID       = "TheBloke/Llama-2-13b-Chat-GPTQ"
@@ -13,9 +13,9 @@ PROMPT         = "The key difference between quantization and pruning is"
 hf_token = os.environ.get("HF_TOKEN")
 print(f"[load] Loading {MODEL_ID} (GPTQ INT4)...")
 t0 = time.perf_counter()
-tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, revision=REVISION, token=hf_token)
+tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, revision=REVISION, use_auth_token=True)
 tokenizer.pad_token = tokenizer.eos_token
-model = GPTQModel.load(MODEL_ID, revision=REVISION, device="cuda:0", token=hf_token)
+model = GPTQModel.from_quantized(MODEL_ID, revision=REVISION, device="cuda:0", use_auth_token=True)
 model.eval()
 print(f"[load] Done in {time.perf_counter()-t0:.1f}s  |  GPU mem: {torch.cuda.memory_allocated()/1e9:.1f} GB")
 

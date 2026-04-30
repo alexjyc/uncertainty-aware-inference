@@ -13,7 +13,7 @@ PROMPT         = "The key difference between quantization and pruning is"
 hf_token = os.environ.get("HF_TOKEN")
 print(f"[load] Loading {MODEL_ID} (NF4)...")
 t0 = time.perf_counter()
-tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, token=hf_token)
+tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
 tokenizer.pad_token = tokenizer.eos_token
 bnb_cfg = BitsAndBytesConfig(
     load_in_4bit=True, bnb_4bit_compute_dtype=torch.float16,
@@ -21,7 +21,7 @@ bnb_cfg = BitsAndBytesConfig(
 )
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_ID, quantization_config=bnb_cfg,
-    device_map="cuda:0", token=hf_token,
+    device_map="cuda:0",
 )
 model.eval()
 print(f"[load] Done in {time.perf_counter()-t0:.1f}s  |  GPU mem: {torch.cuda.memory_allocated()/1e9:.1f} GB")

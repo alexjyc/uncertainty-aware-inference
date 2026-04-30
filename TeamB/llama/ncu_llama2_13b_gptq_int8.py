@@ -11,9 +11,9 @@ TARGET_SEQ_LEN = 128
 PROMPT         = "The key difference between quantization and pruning is"
 
 hf_token = os.environ.get("HF_TOKEN")
-tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, revision=REVISION, token=hf_token)
+tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, revision=REVISION, use_auth_token=True)
 tokenizer.pad_token = tokenizer.eos_token
-model = GPTQModel.from_quantized(MODEL_ID, revision=REVISION, device="cuda:0", token=hf_token)
+model = GPTQModel.from_quantized(MODEL_ID, revision=REVISION, device="cuda:0", use_auth_token=True)
 model.eval()
 
 inputs = tokenizer(PROMPT, return_tensors="pt", padding="max_length",

@@ -10,7 +10,9 @@
 set -euo pipefail
 
 NCU=/usr/local/cuda/bin/ncu
-PY=~/miniconda3/envs/tamanna/bin/python   # use tamanna env for gptqmodel
+PY_TAMANNA=~/miniconda3/envs/tamanna/bin/python
+PY_UAI=~/miniconda3/envs/uai/bin/python
+PY=$PY_TAMANNA   # use tamanna env for gptqmodel
 OUTDIR=$(pwd)/results/ncu
 mkdir -p "$OUTDIR"
 
@@ -21,7 +23,7 @@ run_ncu() {
     echo ""
     echo "=== Profiling $outname ==="
     sudo rm -f /tmp/nsight-compute-lock
-    sudo -E "$NCU" \
+    sudo -E GPTQMODEL_FORCE_KERNEL=torch "$NCU" \
         -o "$OUTDIR/$outname" \
         --metrics "$METRICS" \
         --launch-skip "$skip" --launch-count "$count" \
@@ -37,9 +39,9 @@ run_ncu() {
 }
 
 # ── Llama-2 7B ──────────────────────────────────────────────────────────────
-run_ncu ncu_llama2_7b_fp16.py       llama2_7b_fp16        30  20 "ampere_fp16_s16816gemm|fmha_cutlass"
-run_ncu ncu_llama2_7b_gptq_int4.py  llama2_7b_gptq_int4  500  30 "marlin::Marlin|ampere_bf16_s16816gemm|fmha_cutlass"
-run_ncu ncu_llama2_7b_gptq_int8.py  llama2_7b_gptq_int8   50  20 "ampere_fp16_s16816gemm|ampere_fp16_s1688gemm|fmha_cutlass"
+#run_ncu ncu_llama2_7b_fp16.py       llama2_7b_fp16        30  20 "ampere_fp16_s16816gemm|fmha_cutlass"
+# run_ncu ncu_llama2_7b_gptq_int4.py  llama2_7b_gptq_int4  500  30 "ampere_fp16_s16816gemm|ampere_bf16_s16816gemm|fmha_cutlass"
+# run_ncu ncu_llama2_7b_gptq_int8.py  llama2_7b_gptq_int8   50  20 "ampere_fp16_s16816gemm|ampere_fp16_s1688gemm|fmha_cutlass"
 run_ncu ncu_llama2_7b_awq_int4.py   llama2_7b_awq_int4    50  20 "awq_gemm|fmha_cutlass"
 run_ncu ncu_llama2_7b_nf4.py        llama2_7b_nf4          0  20 "kDequantizeBlockwise|ampere_fp16_s16816gemm|fmha_cutlass"
 
@@ -50,8 +52,8 @@ echo ""
 echo "NOTE: Llama-2 13B FP16 requires 26 GB — will OOM on L4 (24 GB)"
 echo "Skipping 13B FP16, running quantized configs only"
 
-run_ncu ncu_llama2_13b_gptq_int4.py llama2_13b_gptq_int4 500  30 "marlin::Marlin|ampere_bf16_s16816gemm|fmha_cutlass"
-run_ncu ncu_llama2_13b_gptq_int8.py llama2_13b_gptq_int8  50  20 "ampere_fp16_s16816gemm|ampere_fp16_s1688gemm|fmha_cutlass"
+run_ncu ncu_llama2_13b_gptq_int4.py llama2_13b_gptq_int4 500  30 "ampere_fp16_s16816gemm|ampere_bf16_s16816gemm|fmha_cutlass"
+# run_ncu ncu_llama2_13b_gptq_int8.py llama2_13b_gptq_int8  50  20 "ampere_fp16_s16816gemm|ampere_fp16_s1688gemm|fmha_cutlass"
 run_ncu ncu_llama2_13b_awq_int4.py  llama2_13b_awq_int4   50  20 "awq_gemm|fmha_cutlass"
 run_ncu ncu_llama2_13b_nf4.py       llama2_13b_nf4         0  20 "kDequantizeBlockwise|ampere_fp16_s16816gemm|fmha_cutlass"
 

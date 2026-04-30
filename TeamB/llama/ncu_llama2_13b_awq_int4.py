@@ -14,9 +14,9 @@ PROMPT         = "The key difference between quantization and pruning is"
 hf_token = os.environ.get("HF_TOKEN")
 print(f"[load] Loading {MODEL_ID} (AWQ INT4)...")
 t0 = time.perf_counter()
-tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, token=hf_token)
+tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
 tokenizer.pad_token = tokenizer.eos_token
-model = AutoAWQForCausalLM.from_quantized(MODEL_ID, fuse_layers=False, token=hf_token)
+model = AutoAWQForCausalLM.from_quantized(MODEL_ID, fuse_layers=False)
 model.eval()
 print(f"[load] Done in {time.perf_counter()-t0:.1f}s  |  GPU mem: {torch.cuda.memory_allocated()/1e9:.1f} GB")
 
