@@ -54,8 +54,8 @@ echo "Skipping 13B FP16, running quantized configs only"
 
 # run_ncu ncu_llama2_13b_gptq_int4.py llama2_13b_gptq_int4  50  20 "ampere_fp16_s16816gemm|ampere_bf16_s16816gemm|fmha_cutlass"
 run_ncu ncu_llama2_13b_gptq_int8.py llama2_13b_gptq_int8  50  20 "ampere_fp16_s16816gemm|ampere_fp16_s1688gemm|fmha_cutlass"
-run_ncu ncu_llama2_13b_awq_int4.py  llama2_13b_awq_int4   50  20 "awq_gemm|fmha_cutlass"
-run_ncu ncu_llama2_13b_nf4.py       llama2_13b_nf4         0  20 "kDequantizeBlockwise|ampere_fp16_s16816gemm|fmha_cutlass"
+# run_ncu ncu_llama2_13b_awq_int4.py  llama2_13b_awq_int4   50  20 "awq_gemm|fmha_cutlass"
+# run_ncu ncu_llama2_13b_nf4.py       llama2_13b_nf4         0  20 "kDequantizeBlockwise|ampere_fp16_s16816gemm|fmha_cutlass"
 
 echo ""
 echo "All done. CSVs in $OUTDIR/"

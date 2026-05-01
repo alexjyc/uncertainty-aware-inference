@@ -2,78 +2,41 @@
 NOTE: Llama-2 13B FP16 requires 26 GB — will OOM on L4 (24 GB)
 Skipping 13B FP16, running quantized configs only
 
-=== Profiling llama2_13b_gptq_int4 ===
-/home/rohit.ramesh/miniconda3/envs/uai/lib/python3.11/site-packages/auto_gptq/nn_modules/triton_utils/kernels.py:410: FutureWarning: `torch.cuda.amp.custom_fwd(args...)` is deprecated. Please use `torch.amp.custom_fwd(args..., device_type='cuda')` instead.
-  @custom_fwd
-/home/rohit.ramesh/miniconda3/envs/uai/lib/python3.11/site-packages/auto_gptq/nn_modules/triton_utils/kernels.py:418: FutureWarning: `torch.cuda.amp.custom_bwd(args...)` is deprecated. Please use `torch.amp.custom_bwd(args..., device_type='cuda')` instead.
-  @custom_bwd
-/home/rohit.ramesh/miniconda3/envs/uai/lib/python3.11/site-packages/auto_gptq/nn_modules/triton_utils/kernels.py:461: FutureWarning: `torch.cuda.amp.custom_fwd(args...)` is deprecated. Please use `torch.amp.custom_fwd(args..., device_type='cuda')` instead.
-  @custom_fwd(cast_inputs=torch.float16)
-/home/rohit.ramesh/miniconda3/envs/uai/lib/python3.11/site-packages/transformers/models/auto/tokenization_auto.py:898: FutureWarning: The `use_auth_token` argument is deprecated and will be removed in v5 of Transformers. Please use `token` instead.
-  warnings.warn(
-You are using the default legacy behaviour of the <class 'transformers.models.llama.tokenization_llama_fast.LlamaTokenizerFast'>. This is expected, and simply means that the `legacy` (previous) behavior will be used so nothing changes for you. If you want to use the new behaviour, set `legacy=False`. This should only be set if you understand what it means, and thoroughly read the reason why this was added as explained in https://github.com/huggingface/transformers/pull/24565 - if you loaded a llama tokenizer from a GGUF file you can ignore this message.
-WARNING - Exllamav2 kernel is not installed, reset disable_exllamav2 to True. This may because you installed auto_gptq using a pre-build wheel on Windows, in which exllama_kernels are not compiled. To use exllama_kernels to further speedup inference, you can re-install auto_gptq from source.
-WARNING - CUDA kernels for auto_gptq are not installed, this will result in very slow inference speed. This may because:
-1. You disabled CUDA extensions compilation by setting BUILD_CUDA_EXT=0 when install auto_gptq from source.
-2. You are using pytorch without CUDA support.
-3. CUDA and nvcc are not installed in your device.
-/home/rohit.ramesh/miniconda3/envs/uai/lib/python3.11/site-packages/transformers/models/auto/configuration_auto.py:1099: FutureWarning: The `use_auth_token` argument is deprecated and will be removed in v5 of Transformers. Please use `token` instead.
-  warnings.warn(
-/home/rohit.ramesh/miniconda3/envs/uai/lib/python3.11/site-packages/huggingface_hub/file_download.py:896: FutureWarning: `resume_download` is deprecated and will be removed in version 1.0.0. Downloads always resume when possible. If you want to force a new download, use `force_download=True`.
-  warnings.warn(
-/home/rohit.ramesh/miniconda3/envs/uai/lib/python3.11/site-packages/transformers/utils/hub.py:356: FutureWarning: The `use_auth_token` argument is deprecated and will be removed in v5 of Transformers. Please use `token` instead.
-  warnings.warn(
-INFO - The layer lm_head is not quantized.
-CUDA extension not installed.
-==PROF== Connected to process 11389 (/home/rohit.ramesh/miniconda3/envs/uai/bin/python3.11)
-Some weights of the model checkpoint at /home/rohit.ramesh/.cache/huggingface/hub/models--TheBloke--Llama-2-13B-GPTQ/snapshots/a69a40316f417bdc025c1ded962a2d39cb45e384/model.safetensors were not used when initializing LlamaForCausalLM: {'model.layers.0.self_attn.rotary_emb.inv_freq', 'model.layers.1.self_attn.rotary_emb.inv_freq', 'model.layers.28.self_attn.rotary_emb.inv_freq', 'model.layers.29.self_attn.rotary_emb.inv_freq', 'model.layers.35.self_attn.rotary_emb.inv_freq', 'model.layers.25.self_attn.rotary_emb.inv_freq', 'model.layers.24.self_attn.rotary_emb.inv_freq', 'model.layers.5.self_attn.rotary_emb.inv_freq', 'model.layers.11.self_attn.rotary_emb.inv_freq', 'model.layers.21.self_attn.rotary_emb.inv_freq', 'model.layers.3.self_attn.rotary_emb.inv_freq', 'model.layers.13.self_attn.rotary_emb.inv_freq', 'model.layers.38.self_attn.rotary_emb.inv_freq', 'model.layers.16.self_attn.rotary_emb.inv_freq', 'model.layers.18.self_attn.rotary_emb.inv_freq', 'model.layers.27.self_attn.rotary_emb.inv_freq', 'model.layers.32.self_attn.rotary_emb.inv_freq', 'model.layers.17.self_attn.rotary_emb.inv_freq', 'model.layers.36.self_attn.rotary_emb.inv_freq', 'model.layers.6.self_attn.rotary_emb.inv_freq', 'model.layers.9.self_attn.rotary_emb.inv_freq', 'model.layers.15.self_attn.rotary_emb.inv_freq', 'model.layers.4.self_attn.rotary_emb.inv_freq', 'model.layers.22.self_attn.rotary_emb.inv_freq', 'model.layers.33.self_attn.rotary_emb.inv_freq', 'model.layers.14.self_attn.rotary_emb.inv_freq', 'model.layers.7.self_attn.rotary_emb.inv_freq', 'model.layers.12.self_attn.rotary_emb.inv_freq', 'model.layers.31.self_attn.rotary_emb.inv_freq', 'model.layers.10.self_attn.rotary_emb.inv_freq', 'model.layers.34.self_attn.rotary_emb.inv_freq', 'model.layers.30.self_attn.rotary_emb.inv_freq', 'model.layers.37.self_attn.rotary_emb.inv_freq', 'model.layers.2.self_attn.rotary_emb.inv_freq', 'model.layers.23.self_attn.rotary_emb.inv_freq', 'model.layers.39.self_attn.rotary_emb.inv_freq', 'model.layers.19.self_attn.rotary_emb.inv_freq', 'model.layers.8.self_attn.rotary_emb.inv_freq', 'model.layers.20.self_attn.rotary_emb.inv_freq', 'model.layers.26.self_attn.rotary_emb.inv_freq'}. This may or may not be an issue - make sure that the checkpoint does not have unnecessary parameters, or that the model definition correctly corresponds to the checkpoint.
-==PROF== Profiling "ampere_fp16_s16816gemm_fp16_128x128_ldg8_f2f_stages_64x3_nn": 0%....50%....100% - 9 passes
-==PROF== Profiling "ampere_fp16_s16816gemm_fp16_128x128_ldg8_f2f_stages_64x3_nn": 0%....50%....100% - 9 passes
+=== Profiling llama2_13b_nf4 ===
+==PROF== Connected to process 18328 (/home/rohit.ramesh/miniconda3/envs/uai/bin/python3.11)
+[load] Loading meta-llama/Llama-2-13b-hf (NF4)...
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files:  33%|███▎      | 1/3 [02:15<04:30, 135.34s/it]Fetching 3 files:  67%|██████▋   | 2/3 [02:21<00:59, 59.38s/it] Fetching 3 files: 100%|██████████| 3/3 [02:21<00:00, 47.18s/it]
+Loading checkpoint shards:   0%|          | 0/3 [00:00<?, ?it/s]Loading checkpoint shards:  33%|███▎      | 1/3 [00:42<01:24, 42.31s/it]Loading checkpoint shards:  67%|██████▋   | 2/3 [01:30<00:45, 45.83s/it]Loading checkpoint shards: 100%|██████████| 3/3 [02:00<00:00, 38.75s/it]Loading checkpoint shards: 100%|██████████| 3/3 [02:00<00:00, 40.31s/it]
+==PROF== Profiling "kDequantizeBlockwise": 0%....50%....100% - 9 passes
+==PROF== Profiling "kDequantizeBlockwise": 0%....50%....100% - 9 passes
+==PROF== Profiling "ampere_fp16_s16816gemm_fp16_128x128_ldg8_f2f_stages_64x3_tn": 0%....50%....100% - 9 passes
+==PROF== Profiling "kDequantizeBlockwise": 0%....50%....100% - 9 passes
+==PROF== Profiling "kDequantizeBlockwise": 0%....50%....100% - 9 passes
+==PROF== Profiling "ampere_fp16_s16816gemm_fp16_128x128_ldg8_f2f_stages_64x3_tn": 0%....50%....100% - 9 passes
+==PROF== Profiling "kDequantizeBlockwise": 0%....50%....100% - 9 passes
+==PROF== Profiling "kDequantizeBlockwise": 0%....50%....100% - 9 passes
+==PROF== Profiling "ampere_fp16_s16816gemm_fp16_128x128_ldg8_f2f_stages_64x3_tn": 0%....50%....100% - 9 passes
 ==PROF== Profiling "fmha_cutlassF_f16_aligned_64x128_rf_sm80": 0%....50%....100% - 9 passes
-==PROF== Profiling "ampere_fp16_s16816gemm_fp16_128x128_ldg8_f2f_stages_64x3_nn": 0%....50%....100% - 9 passes
-==PROF== Profiling "ampere_fp16_s16816gemm_fp16_128x128_ldg8_f2f_stages_64x3_nn": 0%....50%....100% - 9 passes
-==PROF== Profiling "ampere_fp16_s16816gemm_fp16_128x128_ldg8_f2f_stages_64x3_nn": 0%....50%....100% - 9 passes
-==PROF== Profiling "ampere_fp16_s16816gemm_fp16_128x128_ldg8_f2f_stages_64x3_nn": 0%....50%....100% - 9 passes
-==PROF== Profiling "ampere_fp16_s16816gemm_fp16_128x128_ldg8_f2f_stages_64x3_nn": 0%....50%....100% - 9 passes
-==PROF== Profiling "ampere_fp16_s16816gemm_fp16_128x128_ldg8_f2f_stages_64x3_nn": 0%....50%....100% - 9 passes
-==PROF== Profiling "fmha_cutlassF_f16_aligned_64x128_rf_sm80": 0%....50%....100% - 9 passes
-==PROF== Profiling "ampere_fp16_s16816gemm_fp16_128x128_ldg8_f2f_stages_64x3_nn": 0%....50%....100% - 9 passes
-==PROF== Profiling "ampere_fp16_s16816gemm_fp16_128x128_ldg8_f2f_stages_64x3_nn": 0%....50%....100% - 9 passes
-==PROF== Profiling "ampere_fp16_s16816gemm_fp16_128x128_ldg8_f2f_stages_64x3_nn": 0%....50%....100% - 9 passes
-==PROF== Profiling "ampere_fp16_s16816gemm_fp16_128x128_ldg8_f2f_stages_64x3_nn": 0%....50%....100% - 9 passes
-==PROF== Profiling "ampere_fp16_s16816gemm_fp16_128x128_ldg8_f2f_stages_64x3_nn": 0%....50%....100% - 9 passes
-==PROF== Profiling "ampere_fp16_s16816gemm_fp16_128x128_ldg8_f2f_stages_64x3_nn": 0%....50%....100% - 9 passes
-==PROF== Profiling "fmha_cutlassF_f16_aligned_64x128_rf_sm80": 0%....50%....100% - 9 passes
-==PROF== Profiling "ampere_fp16_s16816gemm_fp16_128x128_ldg8_f2f_stages_64x3_nn": 0%....50%....100% - 9 passes
-==PROF== Profiling "ampere_fp16_s16816gemm_fp16_128x128_ldg8_f2f_stages_64x3_nn": 0%....50%....100% - 9 passes
-==PROF== Profiling "ampere_fp16_s16816gemm_fp16_128x128_ldg8_f2f_stages_64x3_nn": 0%....50%....100% - 9 passes
-[load] Loading TheBloke/Llama-2-13B-GPTQ (GPTQ INT4)...
-[load] Done in 41.4s  |  GPU mem: 7.3 GB
-[warmup] 5 passes (pass 1 = Marlin repack)...
+==PROF== Profiling "kDequantizeBlockwise": 0%....50%....100% - 9 passes
+==PROF== Profiling "kDequantizeBlockwise": 0%....50%....100% - 9 passes
+==PROF== Profiling "ampere_fp16_s16816gemm_fp16_128x128_ldg8_f2f_stages_64x3_tn": 0%....50%....100% - 9 passes
+==PROF== Profiling "kDequantizeBlockwise": 0%....50%....100% - 9 passes
+==PROF== Profiling "kDequantizeBlockwise": 0%....50%....100% - 9 passes
+==PROF== Profiling "ampere_fp16_s16816gemm_fp16_256x128_ldg8_f2f_stages_32x3_tn": 0%....50%....100% - 9 passes
+==PROF== Profiling "kDequantizeBlockwise": 0%....50%....100% - 9 passes
+==PROF== Profiling "kDequantizeBlockwise": 0%....50%....100% - 9 passes
+==PROF== Profiling "ampere_fp16_s16816gemm_fp16_256x128_ldg8_f2f_stages_32x3_tn": 0%....50%....100% - 9 passes
+==PROF== Profiling "kDequantizeBlockwise": 0%....50%....100% - 9 passes
+[load] Done in 273.8s  |  GPU mem: 7.2 GB
+[warmup] Running 3 warmup passes...
+[warmup] Done
+[profile] Running single forward pass (profiled)...
+[profile] Done in 332.5ms
 done
-==PROF== Disconnected from process 11389
-==PROF== Report: /home/rohit.ramesh/tamanna/uncertainty-aware-inference/TeamB/llama/results/ncu/llama2_13b_gptq_int4.ncu-rep
-[extract] llama2_13b_gptq_int4 → CSV
-[done] llama2_13b_gptq_int4
+==PROF== Disconnected from process 18328
+==PROF== Report: /home/rohit.ramesh/tamanna/uncertainty-aware-inference/TeamB/llama/results/ncu/llama2_13b_nf4.ncu-rep
+[extract] llama2_13b_nf4 → CSV
+[done] llama2_13b_nf4
 
-=== Profiling llama2_13b_gptq_int8 ===
-/home/rohit.ramesh/miniconda3/envs/uai/lib/python3.11/site-packages/auto_gptq/nn_modules/triton_utils/kernels.py:410: FutureWarning: `torch.cuda.amp.custom_fwd(args...)` is deprecated. Please use `torch.amp.custom_fwd(args..., device_type='cuda')` instead.
-  @custom_fwd
-/home/rohit.ramesh/miniconda3/envs/uai/lib/python3.11/site-packages/auto_gptq/nn_modules/triton_utils/kernels.py:418: FutureWarning: `torch.cuda.amp.custom_bwd(args...)` is deprecated. Please use `torch.amp.custom_bwd(args..., device_type='cuda')` instead.
-  @custom_bwd
-/home/rohit.ramesh/miniconda3/envs/uai/lib/python3.11/site-packages/auto_gptq/nn_modules/triton_utils/kernels.py:461: FutureWarning: `torch.cuda.amp.custom_fwd(args...)` is deprecated. Please use `torch.amp.custom_fwd(args..., device_type='cuda')` instead.
-  @custom_fwd(cast_inputs=torch.float16)
-/home/rohit.ramesh/miniconda3/envs/uai/lib/python3.11/site-packages/transformers/models/auto/tokenization_auto.py:898: FutureWarning: The `use_auth_token` argument is deprecated and will be removed in v5 of Transformers. Please use `token` instead.
-  warnings.warn(
-You are using the default legacy behaviour of the <class 'transformers.models.llama.tokenization_llama_fast.LlamaTokenizerFast'>. This is expected, and simply means that the `legacy` (previous) behavior will be used so nothing changes for you. If you want to use the new behaviour, set `legacy=False`. This should only be set if you understand what it means, and thoroughly read the reason why this was added as explained in https://github.com/huggingface/transformers/pull/24565 - if you loaded a llama tokenizer from a GGUF file you can ignore this message.
-WARNING - Exllamav2 kernel is not installed, reset disable_exllamav2 to True. This may because you installed auto_gptq using a pre-build wheel on Windows, in which exllama_kernels are not compiled. To use exllama_kernels to further speedup inference, you can re-install auto_gptq from source.
-WARNING - CUDA kernels for auto_gptq are not installed, this will result in very slow inference speed. This may because:
-1. You disabled CUDA extensions compilation by setting BUILD_CUDA_EXT=0 when install auto_gptq from source.
-2. You are using pytorch without CUDA support.
-3. CUDA and nvcc are not installed in your device.
-/home/rohit.ramesh/miniconda3/envs/uai/lib/python3.11/site-packages/transformers/models/auto/configuration_auto.py:1099: FutureWarning: The `use_auth_token` argument is deprecated and will be removed in v5 of Transformers. Please use `token` instead.
-  warnings.warn(
-/home/rohit.ramesh/miniconda3/envs/uai/lib/python3.11/site-packages/huggingface_hub/file_download.py:896: FutureWarning: `resume_download` is deprecated and will be removed in version 1.0.0. Downloads always resume when possible. If you want to force a new download, use `force_download=True`.
-  warnings.warn(
-/home/rohit.ramesh/miniconda3/envs/uai/lib/python3.11/site-packages/transformers/utils/hub.py:356: FutureWarning: The `use_auth_token` argument is deprecated and will be removed in v5 of Transformers. Please use `token` instead.
-  warnings.warn(
+All done. CSVs in /home/rohit.ramesh/tamanna/uncertainty-aware-inference/TeamB/llama/results/ncu/
+Upload *_metrics.csv files to generate the combined roofline plot.
